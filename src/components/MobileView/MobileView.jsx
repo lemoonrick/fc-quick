@@ -124,11 +124,24 @@ function ScrollHint() {
 
 /* ── Single card = exactly one screen ── */
 function MobileCard({ post, index, total }) {
+  const isFirst = index === 0;
   return (
     <motion.article
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: index * 0.03, duration: 0.2 }}
+      animate={isFirst ? { opacity: 1, y: [0, 0, -28, 0] } : { opacity: 1 }}
+      transition={
+        isFirst
+          ? {
+              opacity: { duration: 0.2 },
+              y: {
+                delay: 1.6,
+                duration: 1.1,
+                times: [0, 0.3, 0.65, 1],
+                ease: ['easeIn', 'easeOut', 'easeInOut'],
+              },
+            }
+          : { delay: index * 0.03, duration: 0.2 }
+      }
       style={{
         height: 'calc(100dvh - 56px)',
         scrollSnapAlign: 'start',
@@ -298,7 +311,7 @@ function MobileCard({ post, index, total }) {
             marginRight: -20,
             padding: '20px 20px 24px',
             background:
-              'linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)',
+              'linear-gradient(135deg, #d90429 0%, #ef233c 50%, #ff6b7a 100%)',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -381,7 +394,7 @@ function MobileCard({ post, index, total }) {
                 padding: '12px 22px',
                 borderRadius: 999,
                 background: '#fff',
-                color: '#4f46e5',
+                color: '#d90429',
                 fontSize: 13.5,
                 fontWeight: 700,
                 boxShadow: '0 4px 20px rgba(0,0,0,0.18)',

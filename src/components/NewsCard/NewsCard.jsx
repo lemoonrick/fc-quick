@@ -318,8 +318,8 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
               fontSize: 13,
               fontWeight: 700,
               color: '#fff',
-              background: 'linear-gradient(135deg, #4f46e5, #3730a3)',
-              boxShadow: '0 6px 18px rgba(79,70,229,0.28)',
+              background: 'linear-gradient(135deg, #d90429, #9b031a)',
+              boxShadow: '0 6px 18px rgba(217,4,41,0.32)',
               letterSpacing: '0.01em',
               textDecoration: 'none',
             }}

@@ -75,7 +75,7 @@ export default function Header() {
               width: 32,
               height: 32,
               borderRadius: 9,
-              background: 'linear-gradient(135deg, #4f46e5, #3730a3)',
+              background: 'linear-gradient(135deg, #d90429, #9b031a)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -83,7 +83,7 @@ export default function Header() {
               fontSize: 11,
               fontWeight: 800,
               letterSpacing: '-0.02em',
-              boxShadow: '0 4px 12px rgba(79,70,229,0.3)',
+              boxShadow: '0 4px 12px rgba(217,4,41,0.35)',
               fontFamily: 'Poppins, system-ui, sans-serif',
             }}
           >
@@ -107,7 +107,7 @@ export default function Header() {
               key={label}
               href='#'
               aria-label={label}
-              whileHover={{ scale: 1.15, color: '#4f46e5' }}
+              whileHover={{ scale: 1.15, color: '#d90429' }}
               whileTap={{ scale: 0.9 }}
               transition={{ duration: 0.12 }}
               style={{
