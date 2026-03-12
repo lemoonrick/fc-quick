@@ -236,7 +236,9 @@ function MobileCard({ post, index, total }) {
           }}
         />
         {/* Verdict */}
-        <div style={{ position: 'absolute', bottom: 12, left: 14, zIndex: 10 }}>
+        <div
+          style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 10 }}
+        >
           <VerdictBadge
             categories={post.categories}
             acfVerdict={post.acfVerdict}
@@ -420,7 +422,7 @@ function MobileCard({ post, index, total }) {
           </div>
 
           {/* Progress bar */}
-          <div
+          {/* <div
             style={{
               height: 4,
               background: 'rgba(255,255,255,0.2)',
@@ -434,7 +436,7 @@ function MobileCard({ post, index, total }) {
               transition={{ duration: 0.5, ease: 'easeOut' }}
               style={{ height: '100%', background: '#fff', borderRadius: 999 }}
             />
-          </div>
+          </div> */}
         </div>
       </div>
     </motion.article>

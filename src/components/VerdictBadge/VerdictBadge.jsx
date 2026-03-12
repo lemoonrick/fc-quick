@@ -1,46 +1,53 @@
 import { getVerdict } from '../../utils/format';
+
 const STYLES = {
-  false: {
-    bg: 'rgba(239,68,68,0.1)',
-    color: '#dc2626',
-    border: 'rgba(239,68,68,0.28)',
-  },
-  misleading: {
-    bg: 'rgba(245,158,11,0.1)',
-    color: '#d97706',
-    border: 'rgba(245,158,11,0.28)',
-  },
-  true: {
-    bg: 'rgba(13,148,136,0.1)',
-    color: '#0d9488',
-    border: 'rgba(13,148,136,0.28)',
-  },
+  'verdict--false': { bg: '#dc2626', color: '#fff', icon: '✕' },
+  'verdict--misleading': { bg: '#d97706', color: '#fff', icon: '!' },
+  'verdict--true': { bg: '#16a34a', color: '#fff', icon: '✓' },
 };
-export default function VerdictBadge({ categories }) {
-  const v = getVerdict(categories);
+
+export default function VerdictBadge({ categories, acfVerdict }) {
+  const v = getVerdict(categories, acfVerdict);
   if (!v) return null;
-  const key = v.cssClass.replace('verdict--', '');
-  const s = STYLES[key] || STYLES.false;
+
+  const s = STYLES[v.cssClass] ?? STYLES['verdict--false'];
+
   return (
     <span
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
-        padding: '4px 11px',
-        borderRadius: 999,
-        fontSize: 11,
-        fontWeight: 600,
-        letterSpacing: '0.03em',
+        padding: '5px 12px 5px 8px',
+        borderRadius: 6,
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
         fontFamily: 'Poppins, system-ui, sans-serif',
         background: s.bg,
         color: s.color,
-        border: `1px solid ${s.border}`,
-        backdropFilter: 'blur(6px)',
-        WebkitBackdropFilter: 'blur(6px)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
       }}
     >
-      <span style={{ fontSize: 7 }}>●</span>
+      {/* Icon box */}
+      <span
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: 4,
+          background: 'rgba(0,0,0,0.18)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 11,
+          fontWeight: 900,
+          lineHeight: 1,
+          flexShrink: 0,
+        }}
+      >
+        {s.icon}
+      </span>
       {v.label}
     </span>
   );

@@ -231,7 +231,9 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
           }}
         />
         {/* Verdict badge */}
-        <div style={{ position: 'absolute', bottom: 14, left: 16, zIndex: 10 }}>
+        <div
+          style={{ position: 'absolute', bottom: 14, right: 16, zIndex: 10 }}
+        >
           <VerdictBadge
             categories={post.categories}
             acfVerdict={post.acfVerdict}

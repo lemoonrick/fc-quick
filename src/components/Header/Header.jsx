@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
-import logo from '/public/logo.png';
+// Import both logos
+import logoLight from '/public/logo.png';
+import logoDark from '/public/logo-dark.png';
 
 const XIcon = () => (
   <svg
@@ -59,22 +61,54 @@ const SOCIALS = [
 
 export default function Header() {
   return (
-    <header
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        height: 56,
-        background: 'rgba(240,244,255,0.85)',
-        backdropFilter: 'blur(16px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-        borderBottom: '1px solid rgba(199,210,254,0.6)',
-        boxShadow: '0 1px 0 rgba(79,70,229,0.06)',
-      }}
-    >
+    <header className='dynamic-header'>
       <style>{`
+        /* Locked to Light Mode by Default */
+        .dynamic-header {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 50;
+          height: 56px;
+          background: rgba(240,244,255,0.85);
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
+          border-bottom: 1px solid rgba(199,210,254,0.6);
+          box-shadow: 0 1px 0 rgba(79,70,229,0.06);
+        }
+
+        .logo-light {
+          height: 28px;
+          width: auto;
+          display: block;
+          mix-blend-mode: multiply;
+        }
+
+        .logo-dark {
+          height: 28px;
+          width: auto;
+          display: none;
+        }
+
+        /* This only activates if a 'dark' class is present on the body. 
+          It protects against the logo vanishing if the navbar goes black. 
+        */
+        :global(body.dark) .dynamic-header,
+        body.dark .dynamic-header {
+          background: rgba(15, 23, 42, 0.85); 
+          border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+        }
+        
+        :global(body.dark) .logo-light,
+        body.dark .logo-light {
+          display: none;
+        }
+
+        :global(body.dark) .logo-dark,
+        body.dark .logo-dark {
+          display: block;
+        }
+
+        /* Animations */
         @keyframes live-pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50%       { opacity: 0.4; transform: scale(0.7); }
@@ -100,28 +134,18 @@ export default function Header() {
           justifyContent: 'space-between',
         }}
       >
-        {/* ── Logo + tagline ── */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            // gap: 8,
           }}
         >
-          {/* Logo with live dot */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
-            <img
-              src={logo}
-              alt='FactCrescendo'
-              style={{
-                height: 28,
-                width: 'auto',
-                mixBlendMode: 'multiply',
-                display: 'block',
-              }}
-            />
-            {/* Live indicator dot — top right of logo */}
+            {/* Both logos are here, but CSS decides which one shows based on the .dark class */}
+            <img src={logoLight} alt='FactCrescendo' className='logo-light' />
+            <img src={logoDark} alt='FactCrescendo' className='logo-dark' />
+
             <span
               style={{
                 position: 'absolute',
@@ -138,9 +162,7 @@ export default function Header() {
             />
           </div>
 
-          {/* Quick text + shimmer tagline */}
           <div style={{ lineHeight: 1 }}>
-            {/* Tagline — shimmer gradient text, desktop only */}
             <span
               className='desktop-tagline'
               style={{
@@ -163,7 +185,6 @@ export default function Header() {
           </div>
         </div>
 
-        {/* ── Social icons ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {SOCIALS.map(({ Icon, label, href }) => (
             <motion.a
