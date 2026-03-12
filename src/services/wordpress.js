@@ -1,32 +1,32 @@
 /**
  * wordpress.js
- * All WordPress REST API communication lives here.
- * The base URL comes from .env so you can point this at
- * any WordPress site without touching component code.
+ * Fetches posts from WP REST API and normalizes them.
+ *
+ * ACF fields expected (all optional — falls back gracefully):
+ *   fc_title   — custom card headline (plain text)
+ *   fc_summary — 1–2 sentence summary (plain text)
+ *   fc_image   — image URL (return as URL in ACF, not array)
+ *   fc_verdict — "False" | "Misleading" | "True" | "Unverified"
+ *
+ * To expose ACF fields via REST, add to functions.php:
+ *   add_filter('acf/rest_api/post/get_fields', '__return_true');
+ * OR register each field individually if using ACF Free:
+ *   See README for the exact snippet.
  */
 
-// In dev, Vite proxies /api/wp → WP REST API (kills CORS).
-// In production, set VITE_WP_BASE_URL to the full site URL and
-// ensure your WP server sends CORS headers for your app domain.
-const BASE =
-  import.meta.env.DEV
-    ? '/api/wp'
-    : `${import.meta.env.VITE_WP_BASE_URL}/wp-json/wp/v2`;
+const BASE = import.meta.env.DEV
+  ? '/api/wp'
+  : `${import.meta.env.VITE_WP_BASE_URL}/wp-json/wp/v2`;
 
 const PER_PAGE = Number(import.meta.env.VITE_WP_PER_PAGE) || 10;
 
-/**
- * fetchPosts
- * Returns an array of normalized post objects ready for the UI.
- * @param {number} page - WP REST page number (1-based)
- */
 export async function fetchPosts(page = 1) {
   const params = new URLSearchParams({
     per_page: PER_PAGE,
     page,
     _embed: 1,
-    // Only request fields we actually use — lighter payload
-    _fields: 'id,title,excerpt,link,date,categories,_embedded,_links',
+    // acf fields come through automatically once exposed via REST
+    _fields: 'id,title,excerpt,link,date,categories,acf,_embedded,_links',
   });
 
   const res = await fetch(`${BASE}/posts?${params}`);
@@ -34,7 +34,7 @@ export async function fetchPosts(page = 1) {
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(
-      `WordPress API error ${res.status}: ${res.statusText}${text ? ` — ${text.slice(0, 120)}` : ''}`
+      `WordPress API error ${res.status}: ${res.statusText}${text ? ` — ${text.slice(0, 120)}` : ''}`,
     );
   }
 
@@ -42,48 +42,64 @@ export async function fetchPosts(page = 1) {
   return posts.map(normalizePost);
 }
 
-/**
- * normalizePost
- * Maps raw WP REST post data into a flat, clean shape.
- * Keeps all transformation in one place — easy to update if WP changes.
- */
 function normalizePost(post) {
   const embedded = post._embedded ?? {};
+  const acf = post.acf ?? {};
 
-  // Featured image — try several possible locations
+  // ── Image ──────────────────────────────────────────────────
+  // Priority: ACF custom image → WP featured image → null
   const media = embedded['wp:featuredmedia']?.[0];
-  const image =
+  const wpImage =
     media?.source_url ||
+    media?.media_details?.sizes?.full?.source_url ||
+    media?.media_details?.sizes?.large?.source_url ||
     media?.media_details?.sizes?.medium_large?.source_url ||
-    media?.media_details?.sizes?.medium?.source_url ||
     null;
 
-  // Categories
-  const terms = embedded['wp:term'] ?? [];
-  const categories = terms
-    .flat()
-    .filter((t) => t.taxonomy === 'category');
+  const image = acf.fc_image || wpImage || null;
 
-  // Clean excerpt for fallback summary
+  // ── Title ──────────────────────────────────────────────────
+  // ACF custom title → WP title
+  const wpTitle = stripHtml(post.title?.rendered ?? '');
+  const title = (acf.fc_title || wpTitle).trim();
+
+  // ── Categories (for verdict fallback) ─────────────────────
+  const terms = embedded['wp:term'] ?? [];
+  const categories = terms.flat().filter((t) => t.taxonomy === 'category');
+
+  // ── Verdict ────────────────────────────────────────────────
+  // ACF fc_verdict takes priority over category-derived verdict.
+  // Normalize to lowercase so getVerdict() still works on it.
+  const acfVerdict = acf.fc_verdict
+    ? { name: acf.fc_verdict, slug: acf.fc_verdict.toLowerCase() }
+    : null;
+
+  // ── Excerpt fallback ───────────────────────────────────────
   const rawExcerpt = post.excerpt?.rendered ?? '';
-  const cleanExcerpt = stripHtml(rawExcerpt).trim();
+  const excerpt = stripHtml(rawExcerpt).trim();
+
+  // ── Summary ────────────────────────────────────────────────
+  // ACF summary: use directly (no loading state needed, instant).
+  // No ACF summary: start null, filled by summarize.js async.
+  const acfSummary = acf.fc_summary?.trim() || null;
 
   return {
     id: post.id,
-    title: stripHtml(post.title?.rendered ?? ''),
+    title,
     rawExcerpt,
-    excerpt: cleanExcerpt,
+    excerpt,
     link: post.link,
     date: post.date,
     image,
     categories,
-    // Summary starts null — filled in by hook after AI or excerpt
-    summary: null,
-    summaryLoading: true,
+    acfVerdict, // passed to VerdictBadge, takes priority
+    // If ACF summary exists: load immediately, no shimmer
+    summary: acfSummary,
+    summaryLoading: !acfSummary,
+    hasAcfData: !!(acf.fc_title || acf.fc_summary || acf.fc_image),
   };
 }
 
-/** Strips HTML tags from a string */
 function stripHtml(html) {
   const tmp = document.createElement('div');
   tmp.innerHTML = html;

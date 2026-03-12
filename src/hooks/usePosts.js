@@ -1,84 +1,65 @@
 /**
- * usePosts.js
- * Fixed navigation: uses refs to track in-flight index so rapid key
- * presses never cause stale closures or blank screens.
+ * usePosts.js — data fetching + card navigation
+ * No animClass needed anymore — Framer Motion handles animations via key prop.
+ * Ref-based navigation lock prevents race conditions on rapid key presses.
  */
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { fetchPosts } from '../services/wordpress';
 import { getSummary } from '../services/summarize';
 
-const ANIM_DURATION = 300;
-
 export function usePosts() {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [posts, setPosts]       = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(null);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [animClass, setAnimClass] = useState('card--enter');
 
-  // Refs mirror state so callbacks always read latest without re-creating
-  const idxRef = useRef(0);
-  const totalRef = useRef(0);
-  // Lock prevents overlapping animations when keys are spammed
-  const animatingRef = useRef(false);
+  const idxRef       = useRef(0);
+  const totalRef     = useRef(0);
+  const navigatingRef = useRef(false);
 
-  const setIdx = (n) => {
-    idxRef.current = n;
-    setCurrentIdx(n);
-  };
+  const setIdx = (n) => { idxRef.current = n; setCurrentIdx(n); };
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     setIdx(0);
-    animatingRef.current = false;
-
+    navigatingRef.current = false;
     try {
       const loaded = await fetchPosts(1);
       totalRef.current = loaded.length;
       setPosts(loaded);
       setLoading(false);
-
       for (let i = 0; i < loaded.length; i++) {
         // eslint-disable-next-line no-await-in-loop
         const summary = await getSummary(loaded[i]);
-        setPosts((prev) =>
-          prev.map((p, idx) =>
-            idx === i ? { ...p, summary, summaryLoading: false } : p
-          )
-        );
+        setPosts(prev => prev.map((p, idx) => idx === i ? { ...p, summary, summaryLoading: false } : p));
       }
     } catch (err) {
-      setError(err.message ?? 'Something went wrong loading articles.');
+      setError(err.message ?? 'Something went wrong.');
       setLoading(false);
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const navigate = useCallback((direction) => {
-    if (animatingRef.current) return;
-
-    const current = idxRef.current;
+  const navigate = useCallback((dir) => {
+    if (navigatingRef.current) return;
+    const cur   = idxRef.current;
     const total = totalRef.current;
+    if (dir === 'next' && cur >= total - 1) return;
+    if (dir === 'prev' && cur <= 0) return;
 
-    if (direction === 'next' && current >= total - 1) return;
-    if (direction === 'prev' && current <= 0) return;
-
-    animatingRef.current = true;
-    setAnimClass(direction === 'next' ? 'card--exit-left' : 'card--exit-right');
-
+    navigatingRef.current = true;
+    // Framer Motion animates the exit/enter; we just need to update index
+    // after a short delay so the fly-off animation has time to start
     setTimeout(() => {
-      const next = direction === 'next' ? current + 1 : current - 1;
-      setIdx(next);
-      setAnimClass('card--enter');
-      setTimeout(() => { animatingRef.current = false; }, 50);
-    }, ANIM_DURATION);
+      setIdx(dir === 'next' ? cur + 1 : cur - 1);
+      setTimeout(() => { navigatingRef.current = false; }, 100);
+    }, 50);
   }, []);
 
   const goNext = useCallback(() => navigate('next'), [navigate]);
   const goPrev = useCallback(() => navigate('prev'), [navigate]);
 
-  return { posts, loading, error, currentIdx, animClass, goNext, goPrev, reload: load };
+  return { posts, loading, error, currentIdx, goNext, goPrev, reload: load };
 }
