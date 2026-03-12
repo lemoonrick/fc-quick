@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import logo from './public/logo.png';
 
 const XIcon = () => (
   <svg
@@ -111,7 +112,7 @@ export default function Header() {
           {/* Logo with live dot */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <img
-              src='/logo.png'
+              src={logo}
               alt='FactCrescendo'
               style={{
                 height: 28,
