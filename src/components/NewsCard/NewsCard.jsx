@@ -69,7 +69,7 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
         x,
         rotate,
         borderRadius: 16,
-        background: '#fff',
+        background: '#fafafa',
         overflow: 'hidden',
         cursor: isTop ? 'grab' : 'default',
         userSelect: 'none',
