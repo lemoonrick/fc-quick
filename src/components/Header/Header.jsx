@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+
 const XIcon = () => (
   <svg
     viewBox='0 0 24 24'
@@ -35,12 +36,26 @@ const YTIcon = () => (
     <path d='M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z' />
   </svg>
 );
+
 const SOCIALS = [
-  { Icon: XIcon, label: 'X' },
-  { Icon: FbIcon, label: 'Facebook' },
-  { Icon: InstaIcon, label: 'Instagram' },
-  { Icon: YTIcon, label: 'YouTube' },
+  { Icon: XIcon, label: 'X', href: 'https://x.com/FactCrescendo' },
+  {
+    Icon: FbIcon,
+    label: 'Facebook',
+    href: 'https://www.facebook.com/CrescendoFactCheck',
+  },
+  {
+    Icon: InstaIcon,
+    label: 'Instagram',
+    href: 'https://www.instagram.com/factcrescendoindia',
+  },
+  {
+    Icon: YTIcon,
+    label: 'YouTube',
+    href: 'https://www.youtube.com/@FactCrescendo',
+  },
 ];
+
 export default function Header() {
   return (
     <header
@@ -51,13 +66,28 @@ export default function Header() {
         right: 0,
         zIndex: 50,
         height: 56,
-        background: 'rgba(240,244,255,0.8)',
+        background: 'rgba(240,244,255,0.85)',
         backdropFilter: 'blur(16px) saturate(180%)',
         WebkitBackdropFilter: 'blur(16px) saturate(180%)',
         borderBottom: '1px solid rgba(199,210,254,0.6)',
         boxShadow: '0 1px 0 rgba(79,70,229,0.06)',
       }}
     >
+      <style>{`
+        @keyframes live-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%       { opacity: 0.4; transform: scale(0.7); }
+        }
+        @keyframes tagline-shimmer {
+          0%   { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @media (min-width: 768px) {
+          .desktop-tagline { display: block !important; }
+        }
+        .social-link svg { display: block; }
+      `}</style>
+
       <div
         style={{
           height: '100%',
@@ -69,44 +99,79 @@ export default function Header() {
           justifyContent: 'space-between',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 9,
-              background: 'linear-gradient(135deg, #d90429, #9b031a)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              boxShadow: '0 4px 12px rgba(217,4,41,0.35)',
-              fontFamily: 'Poppins, system-ui, sans-serif',
-            }}
-          >
-            FC
+        {/* ── Logo + tagline ── */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            // gap: 8,
+          }}
+        >
+          {/* Logo with live dot */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <img
+              src='/logo.png'
+              alt='FactCrescendo'
+              style={{
+                height: 28,
+                width: 'auto',
+                mixBlendMode: 'multiply',
+                display: 'block',
+              }}
+            />
+            {/* Live indicator dot — top right of logo */}
+            <span
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: -6,
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: '#d90429',
+                boxShadow: '0 0 0 2px rgba(240,244,255,0.9)',
+                animation: 'live-pulse 2s ease-in-out infinite',
+                display: 'inline-block',
+              }}
+            />
           </div>
-          <span
-            style={{
-              fontSize: 15,
-              fontWeight: 700,
-              color: '#0f172a',
-              letterSpacing: '-0.01em',
-              fontFamily: 'Poppins, system-ui, sans-serif',
-            }}
-          >
-            Quick
-          </span>
+
+          {/* Quick text + shimmer tagline */}
+          <div style={{ lineHeight: 1 }}>
+            {/* Tagline — shimmer gradient text, desktop only */}
+            <span
+              className='desktop-tagline'
+              style={{
+                display: 'none',
+                fontSize: 9.5,
+                fontWeight: 600,
+                letterSpacing: '0.05em',
+                fontFamily: 'Poppins, system-ui, sans-serif',
+                background:
+                  'linear-gradient(90deg, #94a3b8 0%, #d90429 40%, #94a3b8 60%, #94a3b8 100%)',
+                backgroundSize: '200% auto',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                animation: 'tagline-shimmer 4s linear infinite',
+              }}
+            >
+              Fact-checks in seconds
+            </span>
+          </div>
         </div>
+
+        {/* ── Social icons ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {SOCIALS.map(({ Icon, label }) => (
+          {SOCIALS.map(({ Icon, label, href }) => (
             <motion.a
               key={label}
-              href='#'
+              href={href}
+              target='_blank'
+              rel='noopener noreferrer'
               aria-label={label}
+              className='social-link'
               whileHover={{ scale: 1.15, color: '#d90429' }}
               whileTap={{ scale: 0.9 }}
               transition={{ duration: 0.12 }}

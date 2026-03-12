@@ -141,3 +141,8 @@ body {
 button {
   font-family: 'Poppins', system-ui, sans-serif;
 }
+@media (min-width: 768px) {
+  .desktop-tagline {
+    display: block !important;
+  }
+}
