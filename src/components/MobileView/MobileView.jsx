@@ -540,8 +540,15 @@ function ArticleCard({ post, postIndex, type }) {
         </p>
       </div>
 
-      {/* Read More button — always shown */}
-      <div style={{ flexShrink: 0, padding: '10px 18px 14px' }}>
+      {/* Read More button — small, bottom right */}
+      <div
+        style={{
+          flexShrink: 0,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          padding: '8px 18px 10px',
+        }}
+      >
         <a
           href={post.link}
           target='_blank'
@@ -549,26 +556,19 @@ function ArticleCard({ post, postIndex, type }) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: 7,
-            padding: '11px 0',
-            borderRadius: 12,
+            gap: 5,
+            padding: '7px 14px',
+            borderRadius: 999,
             textDecoration: 'none',
-            background:
-              type === 'readmore'
-                ? 'linear-gradient(135deg, #d90429 0%, #9b031a 100%)'
-                : 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            background: '#d90429',
             color: '#fff',
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: 700,
-            boxShadow:
-              type === 'readmore'
-                ? '0 4px 16px rgba(217,4,41,0.35)'
-                : '0 4px 12px rgba(0,0,0,0.2)',
+            boxShadow: '0 3px 10px rgba(217,4,41,0.35)',
             fontFamily: 'Poppins,sans-serif',
           }}
         >
-          Read Full Article <ExternalIcon />
+          Read Article <ExternalIcon />
         </a>
       </div>
 
@@ -670,9 +670,9 @@ export default function MobileView({ posts }) {
         @media (max-width: 767px) { #mobile-feed { display: block !important; } }
         ::-webkit-scrollbar { display: none; }
         @keyframes peekUp {
-          0%   { transform: scale(1) translateY(0); }
-          40%  { transform: scale(1) translateY(-44px); }
-          100% { transform: scale(1) translateY(0); }
+          0%   { transform: translateY(0); }
+          40%  { transform: translateY(-44px); }
+          100% { transform: translateY(0); }
         }
       `}</style>
 
