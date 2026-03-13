@@ -502,7 +502,6 @@ export default function MobileView({ posts }) {
   const [peekedUp, setPeekedUp] = useState(false);
   const [peekedLeft, setPeekedLeft] = useState(false);
   const [showUpTooltip, setShowUpTooltip] = useState(false);
-  const [showLeftTooltip, setShowLeftTooltip] = useState(false);
 
   // Peek wrapper — separate from drag layer
   const peekControls = useAnimation();
@@ -547,30 +546,28 @@ export default function MobileView({ posts }) {
     };
   }, [currentIndex]);
 
-  // Card 1: peek LEFT
+  // Card 1: peek LEFT — no tooltip, just the nudge
   useEffect(() => {
     if (currentIndex !== 1 || peekedLeft) return;
     let cancelled = false;
     const run = async () => {
       await new Promise((r) => setTimeout(r, 800));
       if (cancelled) return;
-      setShowLeftTooltip(true);
       await peekControls.start({
         x: -48,
         transition: { duration: 0.3, ease: 'easeOut' },
       });
+      if (cancelled) return;
       await peekControls.start({
         x: 0,
         transition: { duration: 0.4, ease: 'easeInOut' },
       });
-      await new Promise((r) => setTimeout(r, 500));
-      if (cancelled) return;
-      setShowLeftTooltip(false);
-      setPeekedLeft(true);
+      if (!cancelled) setPeekedLeft(true);
     };
     run();
     return () => {
       cancelled = true;
+      peekControls.stop();
     };
   }, [currentIndex]);
 
@@ -683,51 +680,6 @@ export default function MobileView({ posts }) {
                   }}
                 >
                   Swipe up for next
-                </span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Swipe LEFT tooltip */}
-        <AnimatePresence>
-          {showLeftTooltip && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 4 }}
-              transition={{ duration: 0.2 }}
-              style={{
-                position: 'absolute',
-                bottom: 110,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 200,
-                pointerEvents: 'none',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '8px 16px',
-                  borderRadius: 999,
-                  background: 'rgba(217,4,41,0.88)',
-                  backdropFilter: 'blur(10px)',
-                }}
-              >
-                <span style={{ fontSize: 14 }}>👈</span>
-                <span
-                  style={{
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    color: '#fff',
-                    fontFamily: 'Poppins, system-ui, sans-serif',
-                  }}
-                >
-                  Swipe left to read article
                 </span>
               </div>
             </motion.div>
