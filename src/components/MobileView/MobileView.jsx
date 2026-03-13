@@ -460,12 +460,12 @@ function ArticleCard({ post, postIndex, type }) {
       {/* Date + Share */}
       <div
         style={{
-          height: 40,
+          height: 36,
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 18px',
+          padding: '0 16px',
         }}
       >
         <time
@@ -485,8 +485,8 @@ function ArticleCard({ post, postIndex, type }) {
         <button
           onClick={() => handleShare(post)}
           style={{
-            width: 32,
-            height: 32,
+            width: 30,
+            height: 30,
             borderRadius: '50%',
             background: '#f1f5f9',
             border: 'none',
@@ -501,18 +501,18 @@ function ArticleCard({ post, postIndex, type }) {
         </button>
       </div>
 
-      {/* Title */}
+      {/* Title — max 2 lines to save space */}
       <h2
         style={{
           flexShrink: 0,
           fontSize: 15,
           fontWeight: 700,
-          lineHeight: 1.35,
+          lineHeight: 1.3,
           letterSpacing: '-0.015em',
           color: '#0f172a',
-          margin: '0 18px 10px',
+          margin: '0 16px 8px',
           display: '-webkit-box',
-          WebkitLineClamp: 3,
+          WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
         }}
@@ -520,60 +520,61 @@ function ArticleCard({ post, postIndex, type }) {
         {post.title}
       </h2>
 
-      {/* Summary */}
+      {/* Summary — scrollable, full text always visible */}
       <div
-        style={{ flex: 1, minHeight: 0, padding: '0 18px', overflow: 'hidden' }}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          padding: '0 16px',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+        }}
       >
         <p
           style={{
             fontSize: 13.5,
-            lineHeight: 1.68,
-            color: '#475569',
-            margin: 0,
-            display: '-webkit-box',
-            WebkitLineClamp: 5,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
+            lineHeight: 1.7,
+            color: '#374151',
+            margin: '0 0 8px',
           }}
         >
           {post.summary}
         </p>
       </div>
 
-      {/* Read More button — small, bottom right */}
-      <div
-        style={{
-          flexShrink: 0,
-          display: 'flex',
-          justifyContent: 'flex-end',
-          padding: '8px 18px 10px',
-        }}
-      >
-        <a
-          href={post.link}
-          target='_blank'
-          rel='noopener noreferrer'
+      {/* Bottom: Read Article button + optional ad */}
+      <div style={{ flexShrink: 0 }}>
+        <div
           style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            padding: '7px 14px',
-            borderRadius: 999,
-            textDecoration: 'none',
-            background: '#d90429',
-            color: '#fff',
-            fontSize: 12,
-            fontWeight: 700,
-            boxShadow: '0 3px 10px rgba(217,4,41,0.35)',
-            fontFamily: 'Poppins,sans-serif',
+            justifyContent: 'flex-end',
+            padding: '6px 16px',
           }}
         >
-          Read Article <ExternalIcon />
-        </a>
+          <a
+            href={post.link}
+            target='_blank'
+            rel='noopener noreferrer'
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '7px 14px',
+              borderRadius: 999,
+              textDecoration: 'none',
+              background: '#d90429',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 700,
+              boxShadow: '0 3px 10px rgba(217,4,41,0.3)',
+              fontFamily: 'Poppins,sans-serif',
+            }}
+          >
+            Read Article <ExternalIcon />
+          </a>
+        </div>
+        {showAdStrip && <AdStrip adIndex={postIndex} />}
       </div>
-
-      {/* Ad strip */}
-      {showAdStrip && <AdStrip adIndex={postIndex} />}
     </div>
   );
 }
