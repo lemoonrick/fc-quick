@@ -224,10 +224,10 @@ function MobileCard({ post, index, total, onSwipeUp, onSwipeDown, isActive }) {
   const [showSwipeLeftHint, setShowSwipeLeftHint] = useState(false);
 
   const handleDrag = (e, info) => {
-    if (info.offset.x < -30) setShowSwipeLeftHint(true);
-    else setShowSwipeLeftHint(false);
-    if (info.offset.y < -30) setShowSwipeUpHint(true);
-    else setShowSwipeUpHint(false);
+    const wantLeft = info.offset.x < -30;
+    const wantUp = info.offset.y < -30;
+    if (wantLeft !== showSwipeLeftHint) setShowSwipeLeftHint(wantLeft);
+    if (wantUp !== showSwipeUpHint) setShowSwipeUpHint(wantUp);
   };
 
   const handleDragEnd = (e, info) => {
@@ -243,7 +243,6 @@ function MobileCard({ post, index, total, onSwipeUp, onSwipeDown, isActive }) {
     }
   };
 
-  // AD_H = ad strip height. Keep it small — just enough to be noticed.
   const AD_H = 76;
 
   return (
@@ -399,10 +398,10 @@ function MobileCard({ post, index, total, onSwipeUp, onSwipeDown, isActive }) {
           fontFamily: 'Poppins, system-ui, sans-serif',
         }}
       >
-        {/* IMAGE — fixed 42dvh, no gradient */}
+        {/* IMAGE — fixed 35dvh, no gradient */}
         <div
           style={{
-            height: '42dvh',
+            height: '35dvh',
             flexShrink: 0,
             position: 'relative',
             overflow: 'hidden',
@@ -714,7 +713,7 @@ export default function MobileView({ posts }) {
           </motion.div>
         </AnimatePresence>
 
-        {/* Swipe UP tooltip — card 0 only */}
+        {/* Swipe UP tooltip — card 0, once */}
         {currentIndex === 0 && !peekedUp && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -760,7 +759,7 @@ export default function MobileView({ posts }) {
           </motion.div>
         )}
 
-        {/* Swipe LEFT tooltip — card 1 only */}
+        {/* Swipe LEFT tooltip — card 1, once */}
         {currentIndex === 1 && !peekedLeft && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -805,35 +804,6 @@ export default function MobileView({ posts }) {
             </div>
           </motion.div>
         )}
-
-        {/* Dot indicators */}
-        <div
-          style={{
-            position: 'absolute',
-            right: 5,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 5,
-            zIndex: 50,
-            pointerEvents: 'none',
-          }}
-        >
-          {posts.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: i === currentIndex ? 6 : 4,
-                height: i === currentIndex ? 6 : 4,
-                borderRadius: '50%',
-                background: i === currentIndex ? '#d90429' : 'rgba(0,0,0,0.15)',
-                transition: 'all 0.2s ease',
-                alignSelf: 'center',
-              }}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );
