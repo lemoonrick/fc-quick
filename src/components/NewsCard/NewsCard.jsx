@@ -1,8 +1,43 @@
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
-import { formatDate } from '../../utils/format';
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  useWillChange,
+  animate,
+} from 'framer-motion';
+import { useState } from 'react';
+import { formatDate, getVerdict } from '../../utils/format';
 import VerdictBadge from '../VerdictBadge/VerdictBadge';
 
 const SWIPE_THRESHOLD = 88;
+
+const VERDICT_ACCENT = {
+  'verdict--false': {
+    bar: '#ef4444',
+    glow: 'rgba(239,68,68,0.1)',
+    label: '#ef4444',
+  },
+  'verdict--misleading': {
+    bar: '#f59e0b',
+    glow: 'rgba(245,158,11,0.08)',
+    label: '#f59e0b',
+  },
+  'verdict--true': {
+    bar: '#10b981',
+    glow: 'rgba(16,185,129,0.1)',
+    label: '#10b981',
+  },
+};
+const DEFAULT_ACCENT = {
+  bar: '#6366f1',
+  glow: 'rgba(99,102,241,0.1)',
+  label: '#6366f1',
+};
+
+function getAccent(post) {
+  const v = getVerdict(post.categories, post.acfVerdict);
+  return v ? (VERDICT_ACCENT[v.cssClass] ?? DEFAULT_ACCENT) : DEFAULT_ACCENT;
+}
 
 const CalIcon = () => (
   <svg
@@ -39,23 +74,57 @@ const ArrowIcon = () => (
     />
   </svg>
 );
+const ShareIcon = () => (
+  <svg viewBox='0 0 24 24' fill='none' style={{ width: 16, height: 16 }}>
+    <circle cx='18' cy='5' r='3' stroke='currentColor' strokeWidth='1.8' />
+    <circle cx='6' cy='12' r='3' stroke='currentColor' strokeWidth='1.8' />
+    <circle cx='18' cy='19' r='3' stroke='currentColor' strokeWidth='1.8' />
+    <path
+      d='M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49'
+      stroke='currentColor'
+      strokeWidth='1.8'
+      strokeLinecap='round'
+    />
+  </svg>
+);
+
+async function handleShare(post) {
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: post.title,
+        text: post.summary || post.title,
+        url: post.link,
+      });
+    } else {
+      await navigator.clipboard.writeText(post.link);
+    }
+  } catch (e) {}
+}
 
 export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
   const x = useMotionValue(0);
-  const rotate = useTransform(x, [-220, 0, 220], [-15, 0, 15]);
+  const willChange = useWillChange();
+  // Tighter rotation range = less exaggerated, smoother feel
+  const rotate = useTransform(x, [-300, 0, 300], [-10, 0, 10]);
   const prevOpacity = useTransform(x, [20, SWIPE_THRESHOLD], [0, 1]);
   const nextOpacity = useTransform(x, [-SWIPE_THRESHOLD, -20], [1, 0]);
+  const [isDragging, setIsDragging] = useState(false);
 
+  const accent = getAccent(post);
+
+  const onDragStart = () => setIsDragging(true);
   const onDragEnd = (_, info) => {
+    setIsDragging(false);
     const d = info.offset.x;
     if (d > SWIPE_THRESHOLD) {
-      animate(x, 620, { duration: 0.26, ease: [0.55, 0, 1, 0.45] });
-      setTimeout(() => onSwipeRight?.(), 260);
+      animate(x, 560, { duration: 0.22, ease: [0.4, 0, 0.6, 1] });
+      setTimeout(() => onSwipeRight?.(), 220);
     } else if (d < -SWIPE_THRESHOLD) {
-      animate(x, -620, { duration: 0.26, ease: [0.55, 0, 1, 0.45] });
-      setTimeout(() => onSwipeLeft?.(), 260);
+      animate(x, -560, { duration: 0.22, ease: [0.4, 0, 0.6, 1] });
+      setTimeout(() => onSwipeLeft?.(), 220);
     } else {
-      animate(x, 0, { type: 'spring', stiffness: 500, damping: 32 });
+      animate(x, 0, { type: 'spring', stiffness: 600, damping: 40 });
     }
   };
 
@@ -63,36 +132,38 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
     <motion.article
       drag={isTop ? 'x' : false}
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.65}
+      dragElastic={0}
+      dragMomentum={false}
+      onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       style={{
         x,
         rotate,
-        borderRadius: 16,
+        willChange,
+        borderRadius: 20,
         background: '#fafafa',
         overflow: 'hidden',
-        cursor: isTop ? 'grab' : 'default',
+        cursor: isTop ? (isDragging ? 'grabbing' : 'grab') : 'default',
         userSelect: 'none',
         position: 'relative',
         boxShadow:
-          '0 8px 32px rgba(79,70,229,0.1), 0 2px 8px rgba(15,23,42,0.05)',
+          '0 8px 40px rgba(79,70,229,0.12), 0 2px 8px rgba(15,23,42,0.05)',
       }}
-      initial={{ opacity: 0, scale: 0.97, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.96, y: -6 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 32, mass: 0.7 }}
-      whileHover={
-        isTop
-          ? {
-              y: -5,
-              boxShadow:
-                '0 20px 48px rgba(79,70,229,0.14), 0 4px 12px rgba(15,23,42,0.07)',
-              transition: { duration: 0.18 },
-            }
-          : {}
-      }
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
     >
-      {/* Swipe overlays */}
+      {/* Verdict bar */}
+      <div
+        style={{
+          height: 4,
+          background: accent.bar,
+          boxShadow: `0 0 14px ${accent.bar}60`,
+        }}
+      />
+
+      {/* Swipe hints */}
       <motion.div
         style={{
           opacity: prevOpacity,
@@ -108,14 +179,14 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
       >
         <span
           style={{
-            padding: '7px 16px',
+            padding: '8px 18px',
             borderRadius: 999,
             fontSize: 13,
-            fontWeight: 600,
+            fontWeight: 700,
             fontFamily: 'Poppins, system-ui, sans-serif',
-            background: 'rgba(13,148,136,0.12)',
+            background: 'rgba(13,148,136,0.14)',
             color: '#0d9488',
-            border: '1.5px solid rgba(13,148,136,0.3)',
+            border: '1.5px solid rgba(13,148,136,0.32)',
           }}
         >
           ← Prev
@@ -136,14 +207,14 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
       >
         <span
           style={{
-            padding: '7px 16px',
+            padding: '8px 18px',
             borderRadius: 999,
             fontSize: 13,
-            fontWeight: 600,
+            fontWeight: 700,
             fontFamily: 'Poppins, system-ui, sans-serif',
-            background: 'rgba(239,68,68,0.1)',
+            background: 'rgba(239,68,68,0.12)',
             color: '#dc2626',
-            border: '1.5px solid rgba(239,68,68,0.28)',
+            border: '1.5px solid rgba(239,68,68,0.3)',
           }}
         >
           Next →
@@ -153,39 +224,34 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
       {/* Image */}
       <div
         style={{
-          height: 280,
+          height: 268,
           position: 'relative',
           overflow: 'hidden',
-          borderRadius: '16px 16px 0 0',
-          background: '#dde3f0',
+          background: '#f0f0ee',
         }}
       >
         {post.image ? (
           <>
-            {/* Blurred bg layer — same image, covers the letterbox gaps */}
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                zIndex: 0,
-                backgroundImage: `url(${post.image})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                filter: 'blur(18px) brightness(0.7) saturate(1.2)',
-                transform: 'scale(1.1)', // prevents blur edge artifacts
-              }}
-            />
-            {/* Main image — contain so nothing is cut off */}
             <img
               src={post.image}
               alt={post.title}
               draggable={false}
               style={{
-                position: 'relative',
-                zIndex: 1,
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
+                display: 'block',
+                filter: 'brightness(1.02) contrast(1.05)',
+              }}
+            />
+            {/* Inset vignette */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                boxShadow: 'inset 0 0 40px rgba(0,0,0,0.18)',
+                pointerEvents: 'none',
+                zIndex: 2,
               }}
             />
           </>
@@ -216,21 +282,6 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
             </svg>
           </div>
         )}
-        {/* Gradient fade at bottom */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: '28%',
-            zIndex: 2,
-            background:
-              'linear-gradient(to top, rgba(255,255,255,0.88) 0%, transparent 100%)',
-            pointerEvents: 'none',
-          }}
-        />
-        {/* Verdict badge */}
         <div
           style={{ position: 'absolute', bottom: 14, right: 16, zIndex: 10 }}
         >
@@ -244,7 +295,7 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
       {/* Body */}
       <div
         style={{
-          padding: '20px 24px 22px',
+          padding: '18px 22px 20px',
           fontFamily: 'Poppins, system-ui, sans-serif',
         }}
       >
@@ -261,7 +312,17 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
           {post.title}
         </h2>
 
-        <div style={{ marginBottom: 20 }}>
+        {/* Summary zone — no "Brief" label */}
+        <div
+          style={{
+            background: `linear-gradient(135deg, ${accent.glow}, rgba(248,250,252,0.6))`,
+            border: `1px solid ${accent.bar}20`,
+            borderLeft: `3px solid ${accent.bar}`,
+            borderRadius: '0 12px 12px 0',
+            padding: '11px 14px',
+            marginBottom: 18,
+          }}
+        >
           {post.summaryLoading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[100, 85, 66].map((w, i) => (
@@ -273,7 +334,14 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
               ))}
             </div>
           ) : (
-            <p style={{ fontSize: 13.5, lineHeight: 1.72, color: '#64748b' }}>
+            <p
+              style={{
+                fontSize: 13.5,
+                lineHeight: 1.72,
+                color: '#475569',
+                margin: 0,
+              }}
+            >
               {post.summary}
             </p>
           )}
@@ -285,32 +353,56 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderTop: '1px solid #e8edf5',
-            paddingTop: 16,
           }}
         >
-          <time
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              fontSize: 12,
-              fontWeight: 500,
-              color: '#94a3b8',
-            }}
-            dateTime={post.date}
-          >
-            <CalIcon />
-            {formatDate(post.date)}
-          </time>
-          <motion.a
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <time
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 12,
+                fontWeight: 500,
+                color: '#94a3b8',
+              }}
+              dateTime={post.date}
+            >
+              <CalIcon />
+              {formatDate(post.date)}
+            </time>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleShare(post);
+              }}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: 'rgba(241,245,249,0.9)',
+                border: `1px solid ${accent.bar}25`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: accent.bar,
+                cursor: 'pointer',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = accent.glow)
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = 'rgba(241,245,249,0.9)')
+              }
+            >
+              <ShareIcon />
+            </button>
+          </div>
+          <a
             href={post.link}
             target='_blank'
             rel='noopener noreferrer'
             onClick={(e) => e.stopPropagation()}
-            whileHover={{ y: -2, boxShadow: '0 12px 28px rgba(79,70,229,0.3)' }}
-            whileTap={{ scale: 0.96 }}
-            transition={{ duration: 0.14 }}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -321,13 +413,23 @@ export default function NewsCard({ post, onSwipeLeft, onSwipeRight, isTop }) {
               fontWeight: 700,
               color: '#fff',
               background: 'linear-gradient(135deg, #d90429, #9b031a)',
-              boxShadow: '0 6px 18px rgba(217,4,41,0.32)',
+              boxShadow: '0 4px 16px rgba(217,4,41,0.3)',
               letterSpacing: '0.01em',
               textDecoration: 'none',
+              transition: 'transform 0.14s, box-shadow 0.14s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow =
+                '0 10px 28px rgba(217,4,41,0.38)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(217,4,41,0.3)';
             }}
           >
             Read Article <ArrowIcon />
-          </motion.a>
+          </a>
         </div>
       </div>
     </motion.article>

@@ -1,12 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import NewsCard from '../NewsCard/NewsCard';
 
-/* ─────────────────────────────────────────────────────────────
-   BG FLOATERS
-   Floating fact-check UI fragments — like the STS phone mockup.
-   Indigo/teal color scheme, higher opacity so they're actually visible.
-───────────────────────────────────────────────────────────── */
-
+/* ── BG Floaters ── */
 const ArticleCard = () => (
   <div
     style={{
@@ -332,7 +327,6 @@ const SearchCard = () => (
   </div>
 );
 
-/* floater config: component, position, rotation, float amplitude, delay, opacity */
 const FLOATERS = [
   {
     id: 'article-tr',
@@ -423,50 +417,6 @@ function BgFloaters() {
           <C />
         </motion.div>
       ))}
-    </div>
-  );
-}
-
-/* ── Progress pill dots ── */
-function ProgressTrack({ current, total }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 8,
-        marginBottom: 28,
-      }}
-    >
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        {Array.from({ length: Math.min(total, 10) }, (_, i) => (
-          <motion.span
-            key={i}
-            animate={{
-              width: i === current - 1 ? 24 : 7,
-              background: i === current - 1 ? '#4f46e5' : '#c7d2fe',
-            }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            style={{
-              display: 'inline-block',
-              height: 7,
-              borderRadius: 999,
-              background: '#c7d2fe',
-            }}
-          />
-        ))}
-      </div>
-      <span
-        style={{
-          fontSize: 12,
-          fontWeight: 600,
-          color: '#94a3b8',
-          letterSpacing: '0.05em',
-        }}
-      >
-        {current} of {total}
-      </span>
     </div>
   );
 }
@@ -571,26 +521,22 @@ export default function DesktopView({ post, onNext, onPrev, current, total }) {
     <>
       <BgFloaters />
       <main
+        className='desktop-only'
         style={{
           position: 'relative',
           zIndex: 10,
           minHeight: '100vh',
-          paddingTop: 56,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '72px 24px 48px',
+          padding: '124px 24px 56px',
         }}
-        className='desktop-only'
       >
-        <style>{`
-          @media (max-width: 767px) { .desktop-only { display: none !important; } }
-        `}</style>
+        <style>{`@media (max-width: 767px) { .desktop-only { display: none !important; } }`}</style>
 
         <div style={{ width: '100%', maxWidth: 600 }}>
-          <ProgressTrack current={current} total={total} />
-
+          {/* Card deck */}
           <div style={{ position: 'relative', paddingBottom: 22 }}>
             <GhostDeck />
             <div style={{ position: 'relative', zIndex: 2 }}>
@@ -606,13 +552,14 @@ export default function DesktopView({ post, onNext, onPrev, current, total }) {
             </div>
           </div>
 
+          {/* Nav */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 12,
-              marginTop: 28,
+              marginTop: 24,
             }}
           >
             <NavBtn onClick={onPrev} disabled={current === 1} label='Previous'>
@@ -625,10 +572,11 @@ export default function DesktopView({ post, onNext, onPrev, current, total }) {
           <p
             style={{
               textAlign: 'center',
-              fontSize: 11.5,
-              color: '#94a3b8',
-              marginTop: 10,
+              fontSize: 11,
+              color: '#b0bac9',
+              marginTop: 8,
               fontFamily: 'Poppins, system-ui, sans-serif',
+              letterSpacing: '0.03em',
             }}
           >
             Drag card · Arrow keys · Click buttons

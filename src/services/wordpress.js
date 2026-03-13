@@ -7,11 +7,6 @@
  *   fc_summary — 1–2 sentence summary (plain text)
  *   fc_image   — image URL (return as URL in ACF, not array)
  *   fc_verdict — "False" | "Misleading" | "True" | "Unverified"
- *
- * To expose ACF fields via REST, add to functions.php:
- *   add_filter('acf/rest_api/post/get_fields', '__return_true');
- * OR register each field individually if using ACF Free:
- *   See README for the exact snippet.
  */
 
 const BASE = import.meta.env.DEV
@@ -20,14 +15,34 @@ const BASE = import.meta.env.DEV
 
 const PER_PAGE = Number(import.meta.env.VITE_WP_PER_PAGE) || 10;
 
-export async function fetchPosts(page = 1) {
+const categoryIdCache = {};
+
+async function resolveCategoryId(slug) {
+  if (categoryIdCache[slug]) return categoryIdCache[slug];
+  try {
+    const res = await fetch(`${BASE}/categories?slug=${slug}&_fields=id`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const id = data[0]?.id ?? null;
+    if (id) categoryIdCache[slug] = id;
+    return id;
+  } catch (_) {
+    return null;
+  }
+}
+
+export async function fetchPosts(page = 1, categorySlug = null) {
   const params = new URLSearchParams({
     per_page: PER_PAGE,
     page,
     _embed: 1,
-    // acf fields come through automatically once exposed via REST
     _fields: 'id,title,excerpt,link,date,categories,acf,_embedded,_links',
   });
+
+  if (categorySlug) {
+    const catId = await resolveCategoryId(categorySlug);
+    if (catId) params.set('categories', catId);
+  }
 
   const res = await fetch(`${BASE}/posts?${params}`);
 
@@ -46,8 +61,6 @@ function normalizePost(post) {
   const embedded = post._embedded ?? {};
   const acf = post.acf ?? {};
 
-  // ── Image ──────────────────────────────────────────────────
-  // Priority: ACF custom image → WP featured image → null
   const media = embedded['wp:featuredmedia']?.[0];
   const wpImage =
     media?.source_url ||
@@ -58,29 +71,19 @@ function normalizePost(post) {
 
   const image = acf.fc_image || wpImage || null;
 
-  // ── Title ──────────────────────────────────────────────────
-  // ACF custom title → WP title
   const wpTitle = stripHtml(post.title?.rendered ?? '');
   const title = (acf.fc_title || wpTitle).trim();
 
-  // ── Categories (for verdict fallback) ─────────────────────
   const terms = embedded['wp:term'] ?? [];
   const categories = terms.flat().filter((t) => t.taxonomy === 'category');
 
-  // ── Verdict ────────────────────────────────────────────────
-  // ACF fc_verdict takes priority over category-derived verdict.
-  // Normalize to lowercase so getVerdict() still works on it.
   const acfVerdict = acf.fc_verdict
     ? { name: acf.fc_verdict, slug: acf.fc_verdict.toLowerCase() }
     : null;
 
-  // ── Excerpt fallback ───────────────────────────────────────
   const rawExcerpt = post.excerpt?.rendered ?? '';
   const excerpt = stripHtml(rawExcerpt).trim();
 
-  // ── Summary ────────────────────────────────────────────────
-  // ACF summary: use directly (no loading state needed, instant).
-  // No ACF summary: start null, filled by summarize.js async.
   const acfSummary = acf.fc_summary?.trim() || null;
 
   return {
@@ -92,8 +95,7 @@ function normalizePost(post) {
     date: post.date,
     image,
     categories,
-    acfVerdict, // passed to VerdictBadge, takes priority
-    // If ACF summary exists: load immediately, no shimmer
+    acfVerdict,
     summary: acfSummary,
     summaryLoading: !acfSummary,
     hasAcfData: !!(acf.fc_title || acf.fc_summary || acf.fc_image),

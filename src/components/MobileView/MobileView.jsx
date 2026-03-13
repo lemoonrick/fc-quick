@@ -1,6 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
-import { formatDate } from '../../utils/format';
+import { formatDate, getVerdict } from '../../utils/format';
 import VerdictBadge from '../VerdictBadge/VerdictBadge';
+
+/* ─── Verdict accent colors ─── */
+const VERDICT_ACCENT = {
+  'verdict--false': {
+    bar: '#ef4444',
+    glow: 'rgba(239,68,68,0.18)',
+    label: '#ef4444',
+  },
+  'verdict--misleading': {
+    bar: '#f59e0b',
+    glow: 'rgba(245,158,11,0.15)',
+    label: '#f59e0b',
+  },
+  'verdict--true': {
+    bar: '#10b981',
+    glow: 'rgba(16,185,129,0.15)',
+    label: '#10b981',
+  },
+};
+const DEFAULT_ACCENT = {
+  bar: '#6366f1',
+  glow: 'rgba(99,102,241,0.15)',
+  label: '#6366f1',
+};
+
+function getAccent(post) {
+  const v = getVerdict(post.categories, post.acfVerdict);
+  return v ? (VERDICT_ACCENT[v.cssClass] ?? DEFAULT_ACCENT) : DEFAULT_ACCENT;
+}
 
 /* ─── Icons ─── */
 const CalIcon = () => (
@@ -28,7 +57,7 @@ const CalIcon = () => (
   </svg>
 );
 const ShareIcon = () => (
-  <svg viewBox='0 0 24 24' fill='none' style={{ width: 18, height: 18 }}>
+  <svg viewBox='0 0 24 24' fill='none' style={{ width: 16, height: 16 }}>
     <circle cx='18' cy='5' r='3' stroke='currentColor' strokeWidth='1.8' />
     <circle cx='6' cy='12' r='3' stroke='currentColor' strokeWidth='1.8' />
     <circle cx='18' cy='19' r='3' stroke='currentColor' strokeWidth='1.8' />
@@ -41,7 +70,7 @@ const ShareIcon = () => (
   </svg>
 );
 const ExternalIcon = () => (
-  <svg viewBox='0 0 20 20' fill='none' style={{ width: 14, height: 14 }}>
+  <svg viewBox='0 0 20 20' fill='none' style={{ width: 13, height: 13 }}>
     <path
       d='M11 3h6v6M17 3l-8 8M8 5H4a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1v-4'
       stroke='currentColor'
@@ -96,28 +125,19 @@ const MOCK_ADS = [
   },
 ];
 
-/* ─── Card type logic ─── */
-// Given an array of posts, build a feed with interleaved ad-only cards
 function buildFeed(posts) {
   const feed = [];
   posts.forEach((post, i) => {
-    // Every 5th real post, insert a full-page ad before it
-    if (i > 0 && i % 5 === 0) {
+    if (i > 0 && i % 5 === 0)
       feed.push({ type: 'fullad', adIndex: Math.floor(i / 5) - 1 });
-    }
-    // Determine article card variant
-    if (i % 4 === 2) {
+    if (i % 4 === 2)
       feed.push({ type: 'adstrip', post, postIndex: i, adIndex: i });
-    } else if (i % 5 === 3) {
-      feed.push({ type: 'readmore', post, postIndex: i });
-    } else {
-      feed.push({ type: 'normal', post, postIndex: i });
-    }
+    else if (i % 5 === 3) feed.push({ type: 'readmore', post, postIndex: i });
+    else feed.push({ type: 'normal', post, postIndex: i });
   });
   return feed;
 }
 
-/* ─── Share handler ─── */
 async function handleShare(post) {
   try {
     if (navigator.share) {
@@ -133,7 +153,7 @@ async function handleShare(post) {
   } catch (e) {}
 }
 
-/* ─── Compact ad strip ─── */
+/* ─── Ad strip ─── */
 function AdStrip({ adIndex }) {
   const ad = MOCK_ADS[adIndex % MOCK_ADS.length];
   return (
@@ -243,9 +263,9 @@ function AdStrip({ adIndex }) {
   );
 }
 
-/* ─── Full page ad card ─── */
+/* ─── Full page ad ─── */
 function FullAdCard() {
-  const ad = MOCK_ADS[1]; // NewsGuard for full page
+  const ad = MOCK_ADS[1];
   return (
     <div
       style={{
@@ -262,7 +282,6 @@ function FullAdCard() {
         overflow: 'hidden',
       }}
     >
-      {/* Background glow orbs */}
       <div
         style={{
           position: 'absolute',
@@ -287,7 +306,6 @@ function FullAdCard() {
           pointerEvents: 'none',
         }}
       />
-
       <div
         style={{
           position: 'absolute',
@@ -301,7 +319,6 @@ function FullAdCard() {
       >
         SPONSORED
       </div>
-
       <div style={{ fontSize: 52, marginBottom: 20 }}>{ad.logo}</div>
       <div
         style={{
@@ -369,8 +386,8 @@ function FullAdCard() {
 
 /* ─── Article card ─── */
 function ArticleCard({ post, postIndex, type }) {
-  const showReadMore = type === 'readmore';
   const showAdStrip = type === 'adstrip';
+  const accent = getAccent(post);
 
   return (
     <div
@@ -381,42 +398,52 @@ function ArticleCard({ post, postIndex, type }) {
         flexDirection: 'column',
         background: '#fff',
         fontFamily: 'Poppins,sans-serif',
+        overflow: 'hidden',
       }}
     >
-      {/* Image — 35dvh */}
+      {/* Verdict color bar — top edge */}
       <div
         style={{
-          height: '35dvh',
+          height: 3,
+          flexShrink: 0,
+          background: accent.bar,
+          boxShadow: `0 0 12px ${accent.bar}80`,
+        }}
+      />
+
+      {/* Image */}
+      <div
+        style={{
+          height: '34dvh',
           flexShrink: 0,
           position: 'relative',
           overflow: 'hidden',
-          background: '#e8edf5',
+          background: '#f0f0ee',
         }}
       >
         {post.image ? (
           <>
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundImage: `url(${post.image})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                filter: 'blur(18px) brightness(0.6) saturate(1.2)',
-                transform: 'scale(1.12)',
-              }}
-            />
             <img
               src={post.image}
               alt={post.title}
               loading='lazy'
               draggable={false}
               style={{
-                position: 'relative',
-                zIndex: 1,
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
+                display: 'block',
+                filter: 'brightness(1.02) contrast(1.05)',
+              }}
+            />
+            {/* Inset vignette — frames the image, no bottom gradient */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                boxShadow: 'inset 0 0 40px rgba(0,0,0,0.18)',
+                pointerEvents: 'none',
+                zIndex: 2,
               }}
             />
           </>
@@ -447,8 +474,9 @@ function ArticleCard({ post, postIndex, type }) {
             </svg>
           </div>
         )}
+        {/* Verdict badge — overlaps image/gradient boundary */}
         <div
-          style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 10 }}
+          style={{ position: 'absolute', bottom: -1, right: 14, zIndex: 10 }}
         >
           <VerdictBadge
             categories={post.categories}
@@ -457,98 +485,115 @@ function ArticleCard({ post, postIndex, type }) {
         </div>
       </div>
 
-      {/* Date + Share */}
-      <div
-        style={{
-          height: 36,
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 16px',
-        }}
-      >
-        <time
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            fontSize: 11,
-            fontWeight: 500,
-            color: '#94a3b8',
-          }}
-          dateTime={post.date}
-        >
-          <CalIcon />
-          {formatDate(post.date)}
-        </time>
-        <button
-          onClick={() => handleShare(post)}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: '50%',
-            background: '#f1f5f9',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#475569',
-            cursor: 'pointer',
-          }}
-        >
-          <ShareIcon />
-        </button>
-      </div>
-
-      {/* Title — max 2 lines to save space */}
-      <h2
-        style={{
-          flexShrink: 0,
-          fontSize: 15,
-          fontWeight: 700,
-          lineHeight: 1.3,
-          letterSpacing: '-0.015em',
-          color: '#0f172a',
-          margin: '0 16px 8px',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}
-      >
-        {post.title}
-      </h2>
-
-      {/* Summary — scrollable, full text always visible */}
+      {/* Content zone */}
       <div
         style={{
           flex: 1,
           minHeight: 0,
-          padding: '0 16px',
-          overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '10px 16px 0',
         }}
       >
-        <p
+        {/* Date + share row */}
+        <div
           style={{
-            fontSize: 13.5,
-            lineHeight: 1.7,
-            color: '#374151',
-            margin: '0 0 8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 8,
+            flexShrink: 0,
           }}
         >
-          {post.summary}
-        </p>
+          <time
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              fontSize: 10.5,
+              fontWeight: 500,
+              color: '#94a3b8',
+              letterSpacing: '0.02em',
+            }}
+            dateTime={post.date}
+          >
+            <CalIcon />
+            {formatDate(post.date)}
+          </time>
+          <button
+            onClick={() => handleShare(post)}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              background: `${accent.glow}`,
+              border: `1px solid ${accent.bar}30`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: accent.bar,
+              cursor: 'pointer',
+            }}
+          >
+            <ShareIcon />
+          </button>
+        </div>
+
+        {/* Title */}
+        <h2
+          style={{
+            flexShrink: 0,
+            fontSize: 15,
+            fontWeight: 700,
+            lineHeight: 1.3,
+            letterSpacing: '-0.02em',
+            color: '#0f172a',
+            marginBottom: 10,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
+          {post.title}
+        </h2>
+
+        {/* Summary zone */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            background: `linear-gradient(135deg, ${accent.glow}, rgba(248,250,252,0.8))`,
+            borderRadius: '0 12px 12px 0',
+            borderLeft: `3px solid ${accent.bar}`,
+            border: `1px solid ${accent.bar}18`,
+            borderLeft: `3px solid ${accent.bar}`,
+            padding: '10px 13px',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            marginBottom: 6,
+          }}
+        >
+          <p
+            style={{
+              fontSize: 13,
+              lineHeight: 1.7,
+              color: '#374151',
+              margin: 0,
+            }}
+          >
+            {post.summary}
+          </p>
+        </div>
       </div>
 
-      {/* Bottom: Read Article button + optional ad */}
+      {/* Bottom: read button + ad */}
       <div style={{ flexShrink: 0 }}>
         <div
           style={{
             display: 'flex',
             justifyContent: 'flex-end',
-            padding: '6px 16px',
+            padding: '4px 16px 8px',
           }}
         >
           <a
@@ -559,14 +604,14 @@ function ArticleCard({ post, postIndex, type }) {
               display: 'flex',
               alignItems: 'center',
               gap: 5,
-              padding: '7px 14px',
+              padding: '7px 16px',
               borderRadius: 999,
               textDecoration: 'none',
-              background: '#d90429',
+              background: `linear-gradient(135deg, #d90429, #9b031a)`,
               color: '#fff',
               fontSize: 12,
               fontWeight: 700,
-              boxShadow: '0 3px 10px rgba(217,4,41,0.3)',
+              boxShadow: '0 3px 12px rgba(217,4,41,0.35)',
               fontFamily: 'Poppins,sans-serif',
             }}
           >
@@ -579,7 +624,7 @@ function ArticleCard({ post, postIndex, type }) {
   );
 }
 
-/* ─── Peek tooltip ─── */
+/* ─── Tooltip ─── */
 function PeekTooltip({ visible }) {
   return (
     <div
@@ -630,30 +675,25 @@ export default function MobileView({ posts }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [doPeek, setDoPeek] = useState(false);
 
-  // Track active card via IntersectionObserver
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
-            const idx = parseInt(entry.target.dataset.index, 10);
-            setActiveIndex(idx);
+            setActiveIndex(parseInt(entry.target.dataset.index, 10));
           }
         });
       },
       { root: container, threshold: 0.6 },
     );
-
     container
       .querySelectorAll('[data-index]')
       .forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, [feed.length]);
 
-  // Peek + tooltip on mount, once, with delay for page to settle
   useEffect(() => {
     const peekT = setTimeout(() => setDoPeek(true), 1200);
     const showT = setTimeout(() => setShowTooltip(true), 1200);
@@ -663,7 +703,7 @@ export default function MobileView({ posts }) {
       clearTimeout(showT);
       clearTimeout(hideT);
     };
-  }, []); // runs once on mount only
+  }, []);
 
   return (
     <div id='mobile-feed' style={{ display: 'none' }}>
@@ -677,8 +717,9 @@ export default function MobileView({ posts }) {
         }
       `}</style>
 
-      <div style={{ position: 'fixed', top: 56, left: 0, right: 0, bottom: 0 }}>
-        {/* Scroll container */}
+      <div
+        style={{ position: 'fixed', top: 108, left: 0, right: 0, bottom: 0 }}
+      >
         <div
           ref={containerRef}
           style={{
@@ -693,8 +734,8 @@ export default function MobileView({ posts }) {
         >
           {feed.map((item, i) => {
             const dist = i - activeIndex;
-            const scale = dist === 0 ? 1 : dist === 1 ? 0.96 : 0.93;
-            const opacity = dist === 0 ? 1 : dist === 1 ? 0.8 : 0.55;
+            const scale = dist === 0 ? 1 : dist === 1 ? 0.965 : 0.935;
+            const opacity = dist === 0 ? 1 : dist === 1 ? 0.82 : 0.55;
             return (
               <div
                 key={i}
@@ -714,12 +755,14 @@ export default function MobileView({ posts }) {
                     inset: 0,
                     transform: `scale(${scale})`,
                     opacity,
-                    transition: 'transform 0.3s ease, opacity 0.3s ease',
-                    borderRadius: dist !== 0 ? 14 : 0,
+                    transition:
+                      'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease',
+                    borderRadius: dist !== 0 ? 18 : 0,
                     overflow: 'hidden',
+                    boxShadow:
+                      dist === 0 ? '0 4px 32px rgba(15,23,42,0.12)' : 'none',
                   }}
                 >
-                  {/* Peek wrapper — separate from scale so transforms don't conflict */}
                   <div
                     style={{
                       position: 'absolute',
@@ -745,7 +788,6 @@ export default function MobileView({ posts }) {
             );
           })}
         </div>
-
         <PeekTooltip visible={showTooltip} />
       </div>
     </div>

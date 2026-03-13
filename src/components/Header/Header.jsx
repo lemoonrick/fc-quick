@@ -1,13 +1,10 @@
 import { motion } from 'framer-motion';
-// Import both logos
-import logoLight from '/public/logo.png';
-import logoDark from '/public/logo-dark.png';
 
 const XIcon = () => (
   <svg
     viewBox='0 0 24 24'
     fill='currentColor'
-    style={{ width: 15, height: 15 }}
+    style={{ width: 14, height: 14 }}
   >
     <path d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z' />
   </svg>
@@ -16,7 +13,7 @@ const FbIcon = () => (
   <svg
     viewBox='0 0 24 24'
     fill='currentColor'
-    style={{ width: 15, height: 15 }}
+    style={{ width: 14, height: 14 }}
   >
     <path d='M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z' />
   </svg>
@@ -25,7 +22,7 @@ const InstaIcon = () => (
   <svg
     viewBox='0 0 24 24'
     fill='currentColor'
-    style={{ width: 15, height: 15 }}
+    style={{ width: 14, height: 14 }}
   >
     <path d='M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z' />
   </svg>
@@ -34,7 +31,7 @@ const YTIcon = () => (
   <svg
     viewBox='0 0 24 24'
     fill='currentColor'
-    style={{ width: 15, height: 15 }}
+    style={{ width: 14, height: 14 }}
   >
     <path d='M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z' />
   </svg>
@@ -59,159 +56,193 @@ const SOCIALS = [
   },
 ];
 
-export default function Header() {
+export default function Header({ activeTab, onTabChange, tabs }) {
   return (
-    <header className='dynamic-header'>
+    <>
       <style>{`
-        /* Locked to Light Mode by Default */
-        .dynamic-header {
-          position: fixed;
-          top: 0; left: 0; right: 0;
-          z-index: 50;
-          height: 56px;
-          background: rgba(240,244,255,0.85);
-          backdrop-filter: blur(16px) saturate(180%);
-          -webkit-backdrop-filter: blur(16px) saturate(180%);
-          border-bottom: 1px solid rgba(199,210,254,0.6);
-          box-shadow: 0 1px 0 rgba(79,70,229,0.06);
-        }
-
-        .logo-light {
-          height: 28px;
-          width: auto;
-          display: block;
-          mix-blend-mode: multiply;
-        }
-
-        .logo-dark {
-          height: 28px;
-          width: auto;
-          display: none;
-        }
-
-        /* This only activates if a 'dark' class is present on the body. 
-          It protects against the logo vanishing if the navbar goes black. 
-        */
-        :global(body.dark) .dynamic-header,
-        body.dark .dynamic-header {
-          background: rgba(15, 23, 42, 0.85); 
-          border-bottom: 1px solid rgba(51, 65, 85, 0.6);
-        }
-        
-        :global(body.dark) .logo-light,
-        body.dark .logo-light {
-          display: none;
-        }
-
-        :global(body.dark) .logo-dark,
-        body.dark .logo-dark {
-          display: block;
-        }
-
-        /* Animations */
         @keyframes live-pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
-          50%       { opacity: 0.4; transform: scale(0.7); }
+          50%       { opacity: 0.3; transform: scale(0.6); }
         }
         @keyframes tagline-shimmer {
           0%   { background-position: -200% center; }
-          100% { background-position: 200% center; }
+          100% { background-position:  200% center; }
         }
-        @media (min-width: 768px) {
-          .desktop-tagline { display: block !important; }
-        }
-        .social-link svg { display: block; }
+        .social-icon-btn { transition: color 0.15s, background 0.15s; }
+        .social-icon-btn:hover { color: #d90429 !important; background: rgba(217,4,41,0.07) !important; }
       `}</style>
 
-      <div
-        style={{
-          height: '100%',
-          maxWidth: 600,
-          margin: '0 auto',
-          padding: '0 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
+      <header
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50 }}
       >
+        {/* ── Top bar — light glass ── */}
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            background: 'rgba(245,247,255,0.92)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            borderBottom: '1px solid rgba(199,210,254,0.5)',
+            boxShadow: '0 1px 12px rgba(79,70,229,0.07)',
           }}
         >
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            {/* Both logos are here, but CSS decides which one shows based on the .dark class */}
-            <img src={logoLight} alt='FactCrescendo' className='logo-light' />
-            <img src={logoDark} alt='FactCrescendo' className='logo-dark' />
+          <div
+            style={{
+              maxWidth: 640,
+              margin: '0 auto',
+              padding: '0 18px',
+              height: 54,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            {/* Logo + tagline — light logo only, multiply blends on light bg */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <img
+                  src='/logo.png'
+                  alt='FC Quick'
+                  style={{
+                    height: 26,
+                    width: 'auto',
+                    display: 'block',
+                    mixBlendMode: 'multiply',
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: 1,
+                    right: -9,
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: '#d90429',
+                    boxShadow:
+                      '0 0 6px rgba(217,4,41,0.7), 0 0 12px rgba(217,4,41,0.35)',
+                    animation: 'live-pulse 2s ease-in-out infinite',
+                  }}
+                />
+              </div>
+              <span
+                style={{
+                  fontSize: 8.5,
+                  fontWeight: 600,
+                  letterSpacing: '0.08em',
+                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  background:
+                    'linear-gradient(90deg, #94a3b8 0%, #d90429 40%, #94a3b8 70%)',
+                  backgroundSize: '200% auto',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  animation: 'tagline-shimmer 4s linear infinite',
+                  paddingLeft: 1,
+                }}
+              >
+                Fact-checks in seconds
+              </span>
+            </div>
 
-            <span
-              style={{
-                position: 'absolute',
-                top: 0,
-                right: -6,
-                width: 7,
-                height: 7,
-                borderRadius: '50%',
-                background: '#d90429',
-                boxShadow: '0 0 0 2px rgba(240,244,255,0.9)',
-                animation: 'live-pulse 2s ease-in-out infinite',
-                display: 'inline-block',
-              }}
-            />
-          </div>
-
-          <div style={{ lineHeight: 1 }}>
-            <span
-              className='desktop-tagline'
-              style={{
-                display: 'none',
-                fontSize: 9.5,
-                fontWeight: 600,
-                letterSpacing: '0.05em',
-                fontFamily: 'Poppins, system-ui, sans-serif',
-                background:
-                  'linear-gradient(90deg, #94a3b8 0%, #d90429 40%, #94a3b8 60%, #94a3b8 100%)',
-                backgroundSize: '200% auto',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                animation: 'tagline-shimmer 4s linear infinite',
-              }}
-            >
-              Fact-checks in seconds
-            </span>
+            {/* Social icons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {SOCIALS.map(({ Icon, label, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  aria-label={label}
+                  className='social-icon-btn'
+                  style={{
+                    width: 30,
+                    height: 30,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 8,
+                    color: '#94a3b8',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Icon />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {SOCIALS.map(({ Icon, label, href }) => (
-            <motion.a
-              key={label}
-              href={href}
-              target='_blank'
-              rel='noopener noreferrer'
-              aria-label={label}
-              className='social-link'
-              whileHover={{ scale: 1.15, color: '#d90429' }}
-              whileTap={{ scale: 0.9 }}
-              transition={{ duration: 0.12 }}
+        {/* ── Tab bar — light glass, pill style ── */}
+        {tabs?.length > 0 && (
+          <div
+            style={{
+              background: 'rgba(245,247,255,0.88)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderBottom: '1px solid rgba(199,210,254,0.4)',
+              boxShadow: '0 2px 12px rgba(79,70,229,0.05)',
+            }}
+          >
+            <div
               style={{
-                width: 32,
-                height: 32,
+                maxWidth: 640,
+                margin: '0 auto',
+                padding: '7px 18px',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 8,
-                color: '#94a3b8',
+                gap: 6,
               }}
             >
-              <Icon />
-            </motion.a>
-          ))}
-        </div>
-      </div>
-    </header>
+              {tabs.map((tab) => {
+                const isActive = tab.id === activeTab;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => onTabChange(tab.id)}
+                    style={{
+                      position: 'relative',
+                      padding: '6px 18px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      fontFamily: 'Poppins, system-ui, sans-serif',
+                      letterSpacing: '0.03em',
+                      border: 'none',
+                      borderRadius: 999,
+                      cursor: 'pointer',
+                      outline: 'none',
+                      transition: 'color 0.2s',
+                      background: 'none',
+                      color: isActive ? '#fff' : '#94a3b8',
+                      zIndex: 0,
+                    }}
+                  >
+                    {/* Animated pill background */}
+                    {isActive && (
+                      <motion.span
+                        layoutId='tab-pill'
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          borderRadius: 999,
+                          background:
+                            'linear-gradient(135deg, #d90429, #9b031a)',
+                          boxShadow: '0 2px 10px rgba(217,4,41,0.35)',
+                          zIndex: -1,
+                        }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 400,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </header>
+    </>
   );
 }
