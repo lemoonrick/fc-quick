@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   motion,
   AnimatePresence,
   useMotionValue,
   useTransform,
+  useAnimation,
 } from 'framer-motion';
 import { formatDate } from '../../utils/format';
 import VerdictBadge from '../VerdictBadge/VerdictBadge';
@@ -220,19 +221,8 @@ function MobileCard({ post, index, total, onSwipeUp, onSwipeDown, isActive }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const articleOpacity = useTransform(x, [0, -80], [0, 1]);
-  const [showSwipeUpHint, setShowSwipeUpHint] = useState(false);
-  const [showSwipeLeftHint, setShowSwipeLeftHint] = useState(false);
-
-  const handleDrag = (e, info) => {
-    const wantLeft = info.offset.x < -30;
-    const wantUp = info.offset.y < -30;
-    if (wantLeft !== showSwipeLeftHint) setShowSwipeLeftHint(wantLeft);
-    if (wantUp !== showSwipeUpHint) setShowSwipeUpHint(wantUp);
-  };
 
   const handleDragEnd = (e, info) => {
-    setShowSwipeUpHint(false);
-    setShowSwipeLeftHint(false);
     const { offset, velocity } = info;
     if (offset.x < -60 || velocity.x < -400) {
       window.open(post.link, '_blank');
@@ -260,7 +250,6 @@ function MobileCard({ post, index, total, onSwipeUp, onSwipeDown, isActive }) {
         cursor: isActive ? 'grab' : 'default',
         overflow: 'hidden',
       }}
-      onDrag={handleDrag}
       onDragEnd={handleDragEnd}
     >
       {/* Article open overlay */}
@@ -299,95 +288,6 @@ function MobileCard({ post, index, total, onSwipeUp, onSwipeDown, isActive }) {
         </div>
       </motion.div>
 
-      {/* Drag hints */}
-      <AnimatePresence>
-        {showSwipeUpHint && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'absolute',
-              bottom: AD_H + 20,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 100,
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '7px 14px',
-                borderRadius: 999,
-                background: 'rgba(15,23,42,0.8)',
-                backdropFilter: 'blur(10px)',
-              }}
-            >
-              <span style={{ fontSize: 13 }}>👆</span>
-              <span
-                style={{
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: '#fff',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}
-              >
-                Swipe up for next
-              </span>
-            </div>
-          </motion.div>
-        )}
-        {showSwipeLeftHint && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'absolute',
-              bottom: AD_H + 20,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 100,
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '7px 14px',
-                borderRadius: 999,
-                background: 'rgba(217,4,41,0.88)',
-                backdropFilter: 'blur(10px)',
-              }}
-            >
-              <span style={{ fontSize: 13 }}>👈</span>
-              <span
-                style={{
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: '#fff',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
-                }}
-              >
-                Release to open article
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/*
-        Layout — every height is explicit and fixed so summary NEVER gets squeezed:
-        [IMAGE: 42dvh] [DATE+SHARE: 40px] [TITLE: auto ~56px] [SUMMARY: fills remaining] [AD: AD_H px] [PROGRESS: 3px]
-        Summary = 100dvh - 56(header) - 42dvh - 40 - 56 - AD_H - 3
-      */}
       <div
         style={{
           position: 'absolute',
@@ -583,44 +483,17 @@ function MobileCard({ post, index, total, onSwipeUp, onSwipeDown, isActive }) {
   );
 }
 
-const stackVariants = {
-  enter: (dir) => ({
-    y: dir === -1 ? '-100%' : '0%',
-    zIndex: dir === -1 ? 20 : 10,
-  }),
+const cardVariants = {
+  enter: (dir) => ({ y: dir === -1 ? '-100%' : '100%' }),
   center: {
     y: '0%',
     x: '0%',
-    zIndex: 10,
     transition: { type: 'spring', stiffness: 400, damping: 40 },
   },
   exit: (dir) => ({
-    y: dir === 1 ? '-100%' : '0%',
-    zIndex: dir === 1 ? 20 : 0,
+    y: dir === 1 ? '-100%' : '100%',
     transition: { type: 'spring', stiffness: 400, damping: 40 },
   }),
-  // Card 0: peek UP to hint swipe-up navigation
-  peekUp: {
-    y: [0, -52, 0],
-    zIndex: 10,
-    transition: {
-      duration: 1.0,
-      times: [0, 0.45, 1],
-      ease: 'easeInOut',
-      delay: 1.0,
-    },
-  },
-  // Card 1: peek LEFT to hint swipe-left = open article
-  peekLeft: {
-    x: [0, -52, 0],
-    zIndex: 10,
-    transition: {
-      duration: 1.0,
-      times: [0, 0.45, 1],
-      ease: 'easeInOut',
-      delay: 0.5,
-    },
-  },
 };
 
 export default function MobileView({ posts }) {
@@ -628,6 +501,11 @@ export default function MobileView({ posts }) {
   const [direction, setDirection] = useState(1);
   const [peekedUp, setPeekedUp] = useState(false);
   const [peekedLeft, setPeekedLeft] = useState(false);
+  const [showUpTooltip, setShowUpTooltip] = useState(false);
+  const [showLeftTooltip, setShowLeftTooltip] = useState(false);
+
+  // Peek wrapper — separate from drag layer
+  const peekControls = useAnimation();
 
   const goNext = () => {
     if (currentIndex < posts.length - 1) {
@@ -642,16 +520,64 @@ export default function MobileView({ posts }) {
     }
   };
 
-  const getAnimate = () => {
-    if (currentIndex === 0 && !peekedUp) return 'peekUp';
-    if (currentIndex === 1 && !peekedLeft) return 'peekLeft';
-    return 'center';
-  };
+  // Card 0: peek UP
+  useEffect(() => {
+    if (currentIndex !== 0 || peekedUp) return;
+    let cancelled = false;
+    const run = async () => {
+      await new Promise((r) => setTimeout(r, 1000));
+      if (cancelled) return;
+      setShowUpTooltip(true);
+      await peekControls.start({
+        y: -48,
+        transition: { duration: 0.3, ease: 'easeOut' },
+      });
+      await peekControls.start({
+        y: 0,
+        transition: { duration: 0.4, ease: 'easeInOut' },
+      });
+      await new Promise((r) => setTimeout(r, 500));
+      if (cancelled) return;
+      setShowUpTooltip(false);
+      setPeekedUp(true);
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentIndex]);
 
-  const handleAnimationComplete = (def) => {
-    if (def === 'peekUp') setPeekedUp(true);
-    if (def === 'peekLeft') setPeekedLeft(true);
-  };
+  // Card 1: peek LEFT
+  useEffect(() => {
+    if (currentIndex !== 1 || peekedLeft) return;
+    let cancelled = false;
+    const run = async () => {
+      await new Promise((r) => setTimeout(r, 800));
+      if (cancelled) return;
+      setShowLeftTooltip(true);
+      await peekControls.start({
+        x: -48,
+        transition: { duration: 0.3, ease: 'easeOut' },
+      });
+      await peekControls.start({
+        x: 0,
+        transition: { duration: 0.4, ease: 'easeInOut' },
+      });
+      await new Promise((r) => setTimeout(r, 500));
+      if (cancelled) return;
+      setShowLeftTooltip(false);
+      setPeekedLeft(true);
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentIndex]);
+
+  // Reset peek position when card changes
+  useEffect(() => {
+    peekControls.set({ x: 0, y: 0 });
+  }, [currentIndex]);
 
   return (
     <div id='mobile-feed' style={{ display: 'none' }}>
@@ -671,7 +597,7 @@ export default function MobileView({ posts }) {
           background: '#f8fafc',
         }}
       >
-        {/* Card underneath */}
+        {/* Card underneath (next card, no interaction) */}
         {currentIndex + 1 < posts.length && (
           <div
             style={{
@@ -690,120 +616,123 @@ export default function MobileView({ posts }) {
           </div>
         )}
 
-        {/* Active card */}
+        {/* Outer: handles enter/exit slide transition */}
         <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={currentIndex}
             custom={direction}
-            variants={stackVariants}
+            variants={cardVariants}
             initial='enter'
-            animate={getAnimate()}
+            animate='center'
             exit='exit'
-            style={{ position: 'absolute', inset: 0 }}
-            onAnimationComplete={handleAnimationComplete}
+            style={{ position: 'absolute', inset: 0, zIndex: 10 }}
           >
-            <MobileCard
-              post={posts[currentIndex]}
-              index={currentIndex}
-              total={posts.length}
-              onSwipeUp={goNext}
-              onSwipeDown={goPrev}
-              isActive={true}
-            />
+            {/* Inner: handles peek nudge only — drag lives inside MobileCard */}
+            <motion.div
+              animate={peekControls}
+              style={{ position: 'absolute', inset: 0 }}
+            >
+              <MobileCard
+                post={posts[currentIndex]}
+                index={currentIndex}
+                total={posts.length}
+                onSwipeUp={goNext}
+                onSwipeDown={goPrev}
+                isActive={true}
+              />
+            </motion.div>
           </motion.div>
         </AnimatePresence>
 
-        {/* Swipe UP tooltip — card 0, once */}
-        {currentIndex === 0 && !peekedUp && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 1, 0] }}
-            transition={{
-              delay: 1.0,
-              duration: 1.2,
-              times: [0, 0.15, 0.75, 1],
-            }}
-            style={{
-              position: 'absolute',
-              bottom: 100,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 200,
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <div
+        {/* Swipe UP tooltip */}
+        <AnimatePresence>
+          {showUpTooltip && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.2 }}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '8px 16px',
-                borderRadius: 999,
-                background: 'rgba(15,23,42,0.78)',
-                backdropFilter: 'blur(10px)',
+                position: 'absolute',
+                bottom: 110,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 200,
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
               }}
             >
-              <span style={{ fontSize: 14 }}>👆</span>
-              <span
+              <div
                 style={{
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: '#fff',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  borderRadius: 999,
+                  background: 'rgba(15,23,42,0.82)',
+                  backdropFilter: 'blur(10px)',
                 }}
               >
-                Swipe up for next
-              </span>
-            </div>
-          </motion.div>
-        )}
+                <span style={{ fontSize: 14 }}>👆</span>
+                <span
+                  style={{
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    color: '#fff',
+                    fontFamily: 'Poppins, system-ui, sans-serif',
+                  }}
+                >
+                  Swipe up for next
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Swipe LEFT tooltip — card 1, once */}
-        {currentIndex === 1 && !peekedLeft && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 1, 0] }}
-            transition={{
-              delay: 0.5,
-              duration: 1.2,
-              times: [0, 0.15, 0.75, 1],
-            }}
-            style={{
-              position: 'absolute',
-              bottom: 100,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 200,
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <div
+        {/* Swipe LEFT tooltip */}
+        <AnimatePresence>
+          {showLeftTooltip && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.2 }}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '8px 16px',
-                borderRadius: 999,
-                background: 'rgba(217,4,41,0.88)',
-                backdropFilter: 'blur(10px)',
+                position: 'absolute',
+                bottom: 110,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 200,
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
               }}
             >
-              <span style={{ fontSize: 14 }}>👈</span>
-              <span
+              <div
                 style={{
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: '#fff',
-                  fontFamily: 'Poppins, system-ui, sans-serif',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  borderRadius: 999,
+                  background: 'rgba(217,4,41,0.88)',
+                  backdropFilter: 'blur(10px)',
                 }}
               >
-                Swipe left to read article
-              </span>
-            </div>
-          </motion.div>
-        )}
+                <span style={{ fontSize: 14 }}>👈</span>
+                <span
+                  style={{
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    color: '#fff',
+                    fontFamily: 'Poppins, system-ui, sans-serif',
+                  }}
+                >
+                  Swipe left to read article
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
