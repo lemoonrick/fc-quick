@@ -1,72 +1,99 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { fetchPosts } from '../services/wordpress';
 import { getSummary } from '../services/summarize';
 
 export function usePosts(categorySlug = null) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [error, setError] = useState(null);
 
-  const idxRef = useRef(0);
-  const totalRef = useRef(0);
-  const navigatingRef = useRef(false);
-
-  const setIdx = (n) => {
-    idxRef.current = n;
-    setCurrentIdx(n);
-  };
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setIdx(0);
-    navigatingRef.current = false;
-
+  const loadInitial = useCallback(async () => {
     try {
-      const loaded = await fetchPosts(1, categorySlug);
-      totalRef.current = loaded.length;
-      setPosts(loaded);
-      setLoading(false);
+      setLoading(true);
+      setError(null);
+      setPage(1);
+      setCurrentIdx(0);
 
-      for (let i = 0; i < loaded.length; i++) {
-        if (!loaded[i].summaryLoading) continue;
-        // eslint-disable-next-line no-await-in-loop
-        const summary = await getSummary(loaded[i]);
-        setPosts((prev) =>
-          prev.map((p, idx) =>
-            idx === i ? { ...p, summary, summaryLoading: false } : p,
-          ),
-        );
-      }
+      const data = await fetchPosts(1, categorySlug);
+
+      if (data.length < 10) setHasMore(false);
+      else setHasMore(true);
+
+      const processed = await Promise.all(
+        data.map(async (p) => {
+          if (!p.summaryLoading) return p;
+          const summary = await getSummary(p);
+          return { ...p, summary, summaryLoading: false };
+        }),
+      );
+
+      setPosts(processed);
     } catch (err) {
       setError(err.message ?? 'Something went wrong.');
+    } finally {
       setLoading(false);
     }
   }, [categorySlug]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    loadInitial();
+  }, [loadInitial]);
 
-  const navigate = useCallback((dir) => {
-    if (navigatingRef.current) return;
-    const cur = idxRef.current;
-    const total = totalRef.current;
-    if (dir === 'next' && cur >= total - 1) return;
-    if (dir === 'prev' && cur <= 0) return;
+  // NEW: Dedicated loadMore function for the Mobile Feed
+  const loadMore = useCallback(async () => {
+    if (!hasMore || loadingMore) return;
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const data = await fetchPosts(nextPage, categorySlug);
 
-    navigatingRef.current = true;
-    setTimeout(() => {
-      setIdx(dir === 'next' ? cur + 1 : cur - 1);
-      setTimeout(() => {
-        navigatingRef.current = false;
-      }, 80);
-    }, 40);
-  }, []);
+      if (data.length < 10) setHasMore(false);
 
-  const goNext = useCallback(() => navigate('next'), [navigate]);
-  const goPrev = useCallback(() => navigate('prev'), [navigate]);
+      const processed = await Promise.all(
+        data.map(async (p) => {
+          if (!p.summaryLoading) return p;
+          const summary = await getSummary(p);
+          return { ...p, summary, summaryLoading: false };
+        }),
+      );
 
-  return { posts, loading, error, currentIdx, goNext, goPrev, reload: load };
+      setPosts((prev) => [...prev, ...processed]);
+      setPage(nextPage);
+    } catch (err) {
+      console.error('Failed to load more:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [page, hasMore, loadingMore, categorySlug]);
+
+  // Desktop goNext uses the loadMore function now
+  const goNext = async () => {
+    if (currentIdx < posts.length - 1) {
+      setCurrentIdx((prev) => prev + 1);
+    } else if (hasMore && !loadingMore) {
+      await loadMore();
+      setCurrentIdx((prev) => prev + 1);
+    }
+  };
+
+  const goPrev = () => {
+    if (currentIdx > 0) setCurrentIdx((prev) => prev - 1);
+  };
+
+  return {
+    posts,
+    loading,
+    error,
+    loadingMore,
+    currentIdx,
+    goNext,
+    goPrev,
+    hasMore,
+    reload: loadInitial,
+    loadMore,
+  };
 }

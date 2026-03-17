@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import './App.css';
+// import './App.css';
 import Header from './components/Header/Header';
 import DesktopView from './components/DesktopView/DesktopView';
 import MobileView from './components/MobileView/MobileView';
@@ -13,10 +13,19 @@ const TABS = [
 ];
 
 function TabFeed({ tab, activeTab, onNext, onPrev }) {
-  const { posts, loading, error, currentIdx, goNext, goPrev, reload } =
-    usePosts(tab.category);
+  const {
+    posts,
+    loading,
+    error,
+    currentIdx,
+    goNext,
+    goPrev,
+    reload,
+    loadingMore,
+    hasMore,
+    loadMore, // <-- Extract the new function here
+  } = usePosts(tab.category);
 
-  // Expose goNext/goPrev to parent for keyboard nav on active tab
   useEffect(() => {
     if (tab.id === activeTab) {
       onNext.current = goNext;
@@ -25,6 +34,11 @@ function TabFeed({ tab, activeTab, onNext, onPrev }) {
   }, [tab.id, activeTab, goNext, goPrev, onNext, onPrev]);
 
   const isActive = tab.id === activeTab;
+
+  const todaysCount = posts.filter((p) => {
+    if (!p.date) return false;
+    return new Date(p.date).toDateString() === new Date().toDateString();
+  }).length;
 
   return (
     <div
@@ -45,9 +59,17 @@ function TabFeed({ tab, activeTab, onNext, onPrev }) {
             onNext={goNext}
             onPrev={goPrev}
             current={currentIdx + 1}
-            total={posts.length}
+            total={hasMore ? '...' : posts.length}
+            todaysCount={todaysCount}
+            isLoadingMore={loadingMore}
           />
-          <MobileView posts={posts} />
+          {/* Add the new props to MobileView */}
+          <MobileView
+            posts={posts}
+            onLoadMore={loadMore}
+            hasMore={hasMore}
+            isLoadingMore={loadingMore}
+          />
         </>
       )}
     </div>

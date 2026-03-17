@@ -1,41 +1,14 @@
-@import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-
-/* ============================================================
-   DESIGN TOKENS — new color direction: indigo/teal
-   ============================================================ */
 :root {
-  --bg-page: linear-gradient(160deg, #f0f4ff 0%, #e8f0fe 50%, #eef2f7 100%);
+  /* Crisp, trustworthy newsroom background */
+  --bg-page: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
   --text-main: #0f172a;
   --text-muted: #64748b;
   --border-soft: #e2e8f0;
 
-  /* Primary accent — indigo */
-  --indigo: #4f46e5;
-  --indigo-dark: #3730a3;
-  --indigo-soft: rgba(79, 70, 229, 0.1);
-  --indigo-shadow: rgba(79, 70, 229, 0.28);
-
-  /* Secondary — teal */
-  --teal: #0d9488;
-  --teal-dark: #0f766e;
-  --teal-soft: rgba(13, 148, 136, 0.1);
-  --teal-shadow: rgba(13, 148, 136, 0.25);
-
-  /* Verdict colors */
-  --red: #ef4444;
-  --red-dark: #dc2626;
-  --red-soft: rgba(239, 68, 68, 0.1);
-  --amber: #f59e0b;
-  --amber-soft: rgba(245, 158, 11, 0.1);
-  --green: #22c55e;
-  --green-dark: #16a34a;
-  --green-soft: rgba(34, 197, 94, 0.1);
-
-  --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.07);
-  --shadow-hover: 0 16px 40px rgba(15, 23, 42, 0.12);
-  --radius-card: 16px;
-  --radius-pill: 999px;
+  /* Fact Crescendo Brand Core */
+  --fc-red: #d90429;
+  --fc-red-dark: #9b031a;
+  --fc-navy: #2b2d42;
 }
 
 *,
@@ -54,100 +27,45 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Page background — same glow technique as StartScreen ── */
+button {
+  font-family: inherit;
+}
+
+/* Page background */
 .page-bg {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(160deg, #f0f4ff 0%, #e8f0fe 50%, #eef2f7 100%);
+  background: var(--bg-page);
   overflow: hidden;
   pointer-events: none;
 }
+
 .page-bg-glow {
   position: absolute;
   border-radius: 50%;
   filter: blur(100px);
   pointer-events: none;
 }
+
+/* Brand Red Glow */
 .page-bg-glow-1 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.07), transparent 70%);
+  background: radial-gradient(circle, rgba(217, 4, 41, 0.05), transparent 70%);
   top: -100px;
   right: -80px;
 }
+
+/* Deep Navy Glow */
 .page-bg-glow-2 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(
-    circle,
-    rgba(13, 148, 136, 0.06),
-    transparent 70%
-  );
+  background: radial-gradient(circle, rgba(43, 45, 66, 0.06), transparent 70%);
   bottom: -80px;
   left: -60px;
 }
-.page-bg-glow-3 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.04), transparent 70%);
-  top: 40%;
-  left: 30%;
-}
 
-/* ── Shimmer skeleton ── */
-@keyframes shimmer {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
-}
-.shimmer-bone {
-  display: block;
-  background: linear-gradient(90deg, #e8edf5 25%, #dce3f0 50%, #e8edf5 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.6s infinite;
-  border-radius: 999px;
-}
-
-/* ── Mobile snap feed ── */
-.mobile-feed {
-  position: fixed;
-  top: 56px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-.mobile-feed::-webkit-scrollbar {
-  display: none;
-}
-
-/* ── Floating bg pulse dot ── */
-@keyframes pulse-dot {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(79, 70, 229, 0);
-  }
-}
-
-button {
-  font-family: 'Poppins', system-ui, sans-serif;
-}
-@media (min-width: 768px) {
-  .desktop-tagline {
-    display: block !important;
-  }
-}
-
-/* ── Noise texture overlay on page bg ── */
 .page-bg::after {
   content: '';
   position: absolute;

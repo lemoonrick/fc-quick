@@ -1,0 +1,260 @@
+/* DesktopView.css */
+
+@media (max-width: 767px) {
+  .dv-wrapper,
+  .dv-bg-floaters {
+    display: none !important;
+  }
+}
+
+.dv-wrapper {
+  position: relative;
+  z-index: 10;
+  height: 100vh; /* Locked to exactly the viewport height */
+  overflow: hidden; /* Forbids the window scrollbar completely */
+  box-sizing: border-box; /* Forces padding to stay INSIDE the 100vh */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+@media (max-width: 767px) {
+  .dv-wrapper {
+    display: none !important;
+  }
+}
+
+.dv-layout-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.dv-deck-container {
+  width: 100%;
+  max-width: 960px; /* Expanded for maximum reading comfort */
+  position: relative;
+  perspective: 1000px;
+}
+
+/* Deepened Stacked Cards Effect */
+.dv-ghost-1,
+.dv-ghost-2 {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dv-ghost-1 {
+  z-index: 0;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  transform: rotate(-2.5deg) translateX(-8px) translateY(12px);
+  opacity: 0.6;
+}
+
+.dv-ghost-2 {
+  z-index: 1;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transform: rotate(1.5deg) translateX(8px) translateY(18px);
+  opacity: 0.85;
+}
+
+/* The Main Card - Now a Row Layout */
+.dv-card {
+  width: 100%;
+  height: 540px; /* Taller fixed height guarantees the text will never overflow */
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: row;
+  position: relative;
+}
+
+/* Left Side: Image Area */
+.dv-image-area {
+  position: relative;
+  width: 44%; /* Gives the text column 56% of the 960px width */
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border-radius: 24px 0 0 24px;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dv-blurred-bg-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 24px 0 0 24px;
+}
+
+.dv-blurred-bg {
+  position: absolute;
+  top: -40px;
+  left: -40px;
+  right: -40px;
+  bottom: -40px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(24px);
+  opacity: 0.5;
+}
+
+.dv-main-img {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Share Button straddles the dividing line */
+.dv-share-btn {
+  position: absolute;
+  right: -24px;
+  bottom: 40px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dv-share-btn:hover {
+  transform: scale(1.08);
+}
+.dv-share-btn:active {
+  transform: scale(0.95);
+}
+
+/* Right Side: Content Area */
+.dv-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 44px 48px; /* Generous padding */
+  min-width: 0;
+}
+
+/* Navigation Buttons */
+.dv-nav-btn {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(79, 70, 229, 0.15);
+  background: #ffffff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.08);
+  transition: all 0.2s ease;
+  z-index: 20;
+}
+
+.dv-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+.dv-controls-hint {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-top: 50px;
+  letter-spacing: 0.02em;
+}
+
+/* adjustments for high-scaling laptops */
+@media (max-height: 800px), (max-width: 1200px) {
+  .dv-wrapper {
+    padding: 16px 20px;
+  }
+
+  .dv-card {
+    /* The card will try to take up 75% of the viewport height, 
+       but will never grow taller than 480px or shrink smaller than 380px */
+    height: clamp(380px, 75vh, 480px);
+  }
+
+  .dv-content {
+    /* Tighter padding so the text still fits nicely in the shorter card */
+    padding: 24px 32px;
+  }
+
+  .dv-controls-hint {
+    margin-top: 12px;
+  }
+}
+
+.dv-todays-count {
+  /* No more absolute positioning! */
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  font-weight: 600;
+  color: #334155;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.01em;
+  margin-bottom: 0;
+}
+
+@media (max-height: 800px), (max-width: 1200px) {
+  .dv-todays-count {
+    padding: 8px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+}
+
+/* loading spinner for the Next button */
+.mini-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(79, 70, 229, 0.2);
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: btn-spin 0.8s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

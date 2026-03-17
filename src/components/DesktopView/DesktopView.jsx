@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import NewsCard from '../NewsCard/NewsCard';
+import { formatDate } from '../../utils/format';
+import VerdictBadge from '../VerdictBadge/VerdictBadge';
+import './DesktopView.css';
 
-/* ── BG Floaters ── */
-const ArticleCard = () => (
+/* ── Ambient Background Floaters ── */
+const FloaterArticleCard = () => (
   <div
     style={{
       width: 230,
@@ -330,7 +333,7 @@ const SearchCard = () => (
 const FLOATERS = [
   {
     id: 'article-tr',
-    C: ArticleCard,
+    C: FloaterArticleCard,
     pos: { top: '9%', right: '4%' },
     rotate: 7,
     floatY: 12,
@@ -387,7 +390,7 @@ const FLOATERS = [
 function BgFloaters() {
   return (
     <div
-      className='bg-floaters-wrap'
+      className='dv-bg-floaters'
       style={{
         position: 'fixed',
         inset: 0,
@@ -397,7 +400,6 @@ function BgFloaters() {
       }}
       aria-hidden='true'
     >
-      <style>{`@media (max-width: 767px) { .bg-floaters-wrap { display: none !important; } }`}</style>
       {FLOATERS.map(({ id, C, pos, rotate, floatY, delay, opacity }) => (
         <motion.div
           key={id}
@@ -421,167 +423,358 @@ function BgFloaters() {
   );
 }
 
-/* ── Nav button ── */
+/* ── Icons ── */
+const CalIcon = () => (
+  <svg
+    viewBox='0 0 16 16'
+    fill='none'
+    style={{ width: 15, height: 15, flexShrink: 0 }}
+  >
+    <rect
+      x='1.5'
+      y='2.5'
+      width='13'
+      height='12'
+      rx='2.5'
+      stroke='currentColor'
+      strokeWidth='1.3'
+    />
+    <path d='M1.5 6.5h13' stroke='currentColor' strokeWidth='1.3' />
+    <path
+      d='M5 1.5v2M11 1.5v2'
+      stroke='currentColor'
+      strokeWidth='1.3'
+      strokeLinecap='round'
+    />
+  </svg>
+);
+
+const ShareIcon = () => (
+  <svg viewBox='0 0 24 24' fill='none' style={{ width: 18, height: 18 }}>
+    <circle cx='18' cy='5' r='3' stroke='currentColor' strokeWidth='1.8' />
+    <circle cx='6' cy='12' r='3' stroke='currentColor' strokeWidth='1.8' />
+    <circle cx='18' cy='19' r='3' stroke='currentColor' strokeWidth='1.8' />
+    <path
+      d='M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49'
+      stroke='currentColor'
+      strokeWidth='1.8'
+      strokeLinecap='round'
+    />
+  </svg>
+);
+
+const ExternalIcon = () => (
+  <svg viewBox='0 0 20 20' fill='none' style={{ width: 15, height: 15 }}>
+    <path
+      d='M11 3h6v6M17 3l-8 8M8 5H4a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1v-4'
+      stroke='currentColor'
+      strokeWidth='1.8'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+  </svg>
+);
+
 const ChevL = () => (
-  <svg viewBox='0 0 20 20' fill='none' style={{ width: 20, height: 20 }}>
+  <svg viewBox='0 0 20 20' fill='none' style={{ width: 26, height: 26 }}>
     <path
       d='M13 4L7 10l6 6'
       stroke='currentColor'
-      strokeWidth='1.8'
+      strokeWidth='2.2'
       strokeLinecap='round'
       strokeLinejoin='round'
     />
   </svg>
 );
+
 const ChevR = () => (
-  <svg viewBox='0 0 20 20' fill='none' style={{ width: 20, height: 20 }}>
+  <svg viewBox='0 0 20 20' fill='none' style={{ width: 26, height: 26 }}>
     <path
       d='M7 4l6 6-6 6'
       stroke='currentColor'
-      strokeWidth='1.8'
+      strokeWidth='2.2'
       strokeLinecap='round'
       strokeLinejoin='round'
     />
   </svg>
 );
 
-function NavBtn({ onClick, disabled, children, label }) {
-  return (
-    <motion.button
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      whileHover={
-        !disabled
-          ? {
-              scale: 1.08,
-              y: -2,
-              boxShadow: '0 16px 40px rgba(79,70,229,0.18)',
-            }
-          : {}
+/* ── Animation Variants ── */
+const swipeVariants = {
+  enter: (direction) => ({
+    x: direction > 0 ? 400 : -400,
+    opacity: 0,
+    rotate: direction > 0 ? 12 : -12,
+    scale: 0.85,
+  }),
+  center: {
+    zIndex: 2,
+    x: 0,
+    opacity: 1,
+    rotate: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 350, damping: 28, mass: 1.2 },
+  },
+  exit: (direction) => ({
+    zIndex: 0,
+    x: direction < 0 ? 400 : -400,
+    opacity: 0,
+    scale: 0.85,
+    transition: { duration: 0.2 },
+  }),
+};
+
+/* ── MAIN COMPONENT ── */
+export default function DesktopView({
+  post,
+  onNext,
+  onPrev,
+  current,
+  total,
+  todaysCount = 0,
+  isLoadingMore = false, // <-- This is what I missed!
+}) {
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+    }, 4000); // 4 seconds
+    return () => clearTimeout(timer);
+  }, []);
+
+  const [tuple, setTuple] = useState([current, 0]);
+
+  if (tuple[0] !== current) {
+    setTuple([current, current > tuple[0] ? 1 : -1]);
+  }
+  const direction = tuple[1];
+
+  async function handleShare() {
+    try {
+      if (navigator.share)
+        await navigator.share({
+          title: post.title,
+          text: post.summary || post.title,
+          url: post.link,
+        });
+      else {
+        await navigator.clipboard.writeText(post.link);
+        alert('Link copied!');
       }
-      whileTap={!disabled ? { scale: 0.94 } : {}}
-      transition={{ duration: 0.13 }}
-      style={{
-        width: 44,
-        height: 44,
-        borderRadius: '50%',
-        border: '1.5px solid #c7d2fe',
-        background: '#fff',
-        boxShadow: '0 4px 14px rgba(79,70,229,0.1)',
-        color: '#4f46e5',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: disabled ? 0.3 : 1,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-      }}
-    >
-      {children}
-    </motion.button>
-  );
-}
+    } catch (e) {}
+  }
 
-/* ── Ghost card deck ── */
-function GhostDeck() {
-  return (
-    <>
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          zIndex: 0,
-          background: '#fff',
-          borderRadius: 16,
-          boxShadow: '0 4px 20px rgba(79,70,229,0.07)',
-          transform: 'translateY(20px) rotate(-2.5deg) scale(0.965)',
-          opacity: 0.5,
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          zIndex: 1,
-          background: '#fff',
-          borderRadius: 16,
-          boxShadow: '0 6px 24px rgba(79,70,229,0.09)',
-          transform: 'translateY(11px) rotate(2deg) scale(0.982)',
-          opacity: 0.75,
-        }}
-      />
-    </>
-  );
-}
-
-/* ── MAIN ── */
-export default function DesktopView({ post, onNext, onPrev, current, total }) {
   if (!post) return null;
+
   return (
     <>
       <BgFloaters />
-      <main
-        className='desktop-only'
-        style={{
-          position: 'relative',
-          zIndex: 10,
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '124px 24px 56px',
-        }}
-      >
-        <style>{`@media (max-width: 767px) { .desktop-only { display: none !important; } }`}</style>
+      <main className='dv-wrapper'>
+        {/* The Auto-Fading Today's Count Badge */}
+        <AnimatePresence>
+          {todaysCount > 0 && isVisible && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+              animate={{ height: 'auto', opacity: 1, marginBottom: 24 }}
+              exit={{
+                height: 0,
+                opacity: 0,
+                marginBottom: 0,
+                transition: {
+                  height: { duration: 0.4, delay: 0.1 },
+                  opacity: { duration: 0.3 },
+                },
+              }}
+              style={{ overflow: 'hidden' }}
+            >
+              <motion.div
+                className='dv-todays-count'
+                initial={{ y: -10 }}
+                animate={{ y: 0 }}
+                exit={{ y: -10 }}
+              >
+                <span style={{ fontSize: 16 }}>⚡</span>
+                {todaysCount} new{' '}
+                {todaysCount === 1 ? 'fact-check' : 'fact-checks'} today
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <div style={{ width: '100%', maxWidth: 600 }}>
-          {/* Card deck */}
-          <div style={{ position: 'relative', paddingBottom: 22 }}>
-            <GhostDeck />
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <AnimatePresence mode='wait'>
-                <NewsCard
+        <div className='dv-layout-row'>
+          <motion.button
+            className='dv-nav-btn'
+            onClick={onPrev}
+            disabled={current === 1}
+            whileHover={current !== 1 ? { scale: 1.1, y: -2 } : {}}
+            whileTap={current !== 1 ? { scale: 0.95 } : {}}
+            title='Previous (Left Arrow Key)'
+          >
+            <ChevL />
+          </motion.button>
+
+          <div className='dv-deck-container'>
+            <div className='dv-ghost-1' />
+            <div className='dv-ghost-2' />
+
+            <div style={{ position: 'relative', zIndex: 3 }}>
+              <AnimatePresence
+                initial={false}
+                custom={direction}
+                mode='popLayout'
+              >
+                <motion.div
                   key={post.id}
-                  post={post}
-                  isTop
-                  onSwipeLeft={onNext}
-                  onSwipeRight={onPrev}
-                />
+                  custom={direction}
+                  variants={swipeVariants}
+                  initial='enter'
+                  animate='center'
+                  exit='exit'
+                  className='dv-card'
+                >
+                  {/* Image Section (Left) */}
+                  <div className='dv-image-area'>
+                    <div className='dv-blurred-bg-container'>
+                      {post.image && (
+                        <div
+                          className='dv-blurred-bg'
+                          style={{ backgroundImage: `url(${post.image})` }}
+                        />
+                      )}
+                    </div>
+
+                    {post.image ? (
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        draggable={false}
+                        className='dv-main-img'
+                      />
+                    ) : (
+                      <div
+                        style={{ margin: 'auto', fontSize: 48, opacity: 0.2 }}
+                      >
+                        📰
+                      </div>
+                    )}
+
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 24,
+                        left: 24,
+                        zIndex: 20,
+                      }}
+                    >
+                      <VerdictBadge
+                        categories={post.categories}
+                        acfVerdict={post.acfVerdict}
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleShare}
+                      className='dv-share-btn'
+                      title='Share Article'
+                    >
+                      <ShareIcon />
+                    </button>
+                  </div>
+
+                  {/* Text Content Section (Right) */}
+                  <div className='dv-content'>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        fontSize: 13.5,
+                        color: '#64748b',
+                        fontWeight: 500,
+                        marginBottom: 14,
+                      }}
+                    >
+                      <CalIcon /> {formatDate(post.date)}
+                    </div>
+
+                    <h2
+                      style={{
+                        fontSize: 22,
+                        fontWeight: 700,
+                        color: '#0f172a',
+                        lineHeight: 1.4,
+                        marginBottom: 16,
+                      }}
+                    >
+                      {post.title}
+                    </h2>
+
+                    <div
+                      style={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        marginBottom: 28,
+                        paddingRight: 8,
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 15.5,
+                          lineHeight: 1.7,
+                          color: '#334155',
+                          margin: 0,
+                        }}
+                      >
+                        {post.summary}
+                      </p>
+                    </div>
+
+                    <a
+                      href={post.link}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        padding: '16px 20px',
+                        borderRadius: '12px',
+                        textDecoration: 'none',
+                        background:
+                          'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+                        color: '#ffffff',
+                        fontSize: 15,
+                        fontWeight: 600,
+                        boxShadow: '0 6px 16px rgba(220, 38, 38, 0.25)',
+                        transition: 'opacity 0.2s',
+                        marginTop: 'auto',
+                      }}
+                    >
+                      Read Full Article <ExternalIcon />
+                    </a>
+                  </div>
+                </motion.div>
               </AnimatePresence>
             </div>
           </div>
 
-          {/* Nav */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 12,
-              marginTop: 24,
-            }}
+          <motion.button
+            className='dv-nav-btn'
+            onClick={onNext}
+            disabled={current === total && !isLoadingMore}
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            title='Next (Right Arrow Key)'
           >
-            <NavBtn onClick={onPrev} disabled={current === 1} label='Previous'>
-              <ChevL />
-            </NavBtn>
-            <NavBtn onClick={onNext} disabled={current === total} label='Next'>
-              <ChevR />
-            </NavBtn>
-          </div>
-          <p
-            style={{
-              textAlign: 'center',
-              fontSize: 11,
-              color: '#b0bac9',
-              marginTop: 8,
-              fontFamily: 'Poppins, system-ui, sans-serif',
-              letterSpacing: '0.03em',
-            }}
-          >
-            Drag card · Arrow keys · Click buttons
-          </p>
+            {isLoadingMore ? <div className='mini-spinner' /> : <ChevR />}
+          </motion.button>
         </div>
+
+        <p className='dv-controls-hint'>
+          Use Arrow Keys or Nav Buttons to browse
+        </p>
       </main>
     </>
   );
