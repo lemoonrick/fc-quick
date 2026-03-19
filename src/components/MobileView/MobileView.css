@@ -14,13 +14,13 @@
 .mobile-feed-bg {
   position: fixed;
   inset: 0;
-  background-color: #0f172a;
+  background-color: transparent; /* Kills the dark mode */
   z-index: -1;
 }
 
 .mobile-feed-viewport {
   position: fixed;
-  top: 108px;
+  top: 50px;
   left: 0;
   right: 0;
   bottom: 0;

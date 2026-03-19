@@ -122,10 +122,10 @@ export default function App() {
 
   return (
     <>
-      <div className='page-bg' aria-hidden='true'>
-        <div className='page-bg-glow page-bg-glow-1' />
-        <div className='page-bg-glow page-bg-glow-2' />
-        <div className='page-bg-glow page-bg-glow-3' />
+      <div className="page-bg" aria-hidden="true">
+        <div className="page-bg-glow page-bg-glow-1" />
+        <div className="page-bg-glow page-bg-glow-2" />
+        <div className="page-bg-glow page-bg-glow-3" />
       </div>
 
       <div
@@ -133,7 +133,28 @@ export default function App() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <Header activeTab={activeTab} onTabChange={setActiveTab} tabs={TABS} />
+        {/* Desktop Header gets hidden on mobile by CSS */}
+        <div className="desktop-header-wrap">
+          <Header
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            tabs={TABS}
+          />
+        </div>
+
+        {/* Tiny Light-Mode Mobile Tabs */}
+        <div className="mobile-tabs-container">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`mobile-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {activeTab === tab.id && <span className="mobile-tab-dot" />}
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
         {/* Tab panels stacked, only active one is visible */}
         <div style={{ position: 'relative' }}>
