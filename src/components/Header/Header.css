@@ -28,11 +28,13 @@
   flex-direction: column;
   gap: 2px;
   justify-self: start;
+  align-items: flex-start; /* FIXES THE DESKTOP LOGO STRETCH */
 }
 
 .header-logo-img {
   height: 26px;
   width: auto;
+  object-fit: contain;
   mix-blend-mode: multiply;
 }
 
@@ -69,10 +71,17 @@
   outline: none;
   transition: color 0.2s;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px; /* Space between dot and text */
 }
 
 .header-tab.active {
   color: #ffffff;
+}
+
+.mobile-tab-dot {
+  display: none; /* Hidden on desktop */
 }
 
 /* Right: Socials */
@@ -100,44 +109,48 @@
   transform: translateY(-2px);
 }
 
-/* Mobile Adjustments */
+/* --- MOBILE ADJUSTMENTS --- */
 @media (max-width: 767px) {
   .header-container {
-    display: flex;
-    flex-direction: column;
-    padding: 8px 16px 10px; /* Tighter padding */
-    gap: 10px; /* Tighter gap */
-  }
-
-  .header-logo-group {
+    display: flex; /* Overrides the grid */
+    justify-content: space-between;
     align-items: center;
-    width: 100%;
-    position: relative;
+    padding: 10px 16px;
   }
 
   .header-logo-img {
-    height: 22px; /* Slightly smaller logo for space */
+    height: 22px; /* Sleek mobile size */
   }
 
-  .header-socials {
-    position: absolute;
-    right: 0;
-    top: -2px;
-  }
-
-  .header-socials a:not(:first-child) {
-    display: none;
+  /* Hide the desktop tagline, socials, and red pill */
+  .header-tagline,
+  .header-socials,
+  .desktop-tab-pill {
+    display: none !important;
   }
 
   .header-tabs-wrapper {
-    width: 100%;
-    justify-content: center;
-    padding: 4px; /* Thinner tab track */
+    background: transparent;
+    padding: 0;
+    gap: 16px; /* Spacing between the interactive tabs */
   }
 
   .header-tab {
-    flex: 1;
-    padding: 6px 16px; /* Thinner tabs */
-    font-size: 13px;
+    padding: 4px 0;
+    font-size: 15px; /* Larger, tappable font */
+    color: #64748b;
+  }
+
+  .header-tab.active {
+    color: #0f172a; /* Dark text for active mobile tab */
+  }
+
+  .mobile-tab-dot {
+    display: block;
+    width: 6px;
+    height: 6px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    flex-shrink: 0;
   }
 }
